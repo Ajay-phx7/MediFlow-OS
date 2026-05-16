@@ -7,7 +7,6 @@ import {
   LineChart,
   Map,
   MessagesSquare,
-  ShieldAlert,
   Stethoscope,
   Users,
 } from "lucide-react";
@@ -19,7 +18,6 @@ import QueueManager from "./pages/admin/QueueManager.jsx";
 import SurgePrediction from "./pages/admin/SurgePrediction.jsx";
 import LiveMap from "./pages/admin/LiveMap.jsx";
 import DeptChat from "./pages/admin/DeptChat.jsx";
-import EmergencyControl from "./pages/admin/EmergencyControl.jsx";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard.jsx";
 import PatientList from "./pages/doctor/PatientList.jsx";
 import AIScribe from "./pages/doctor/AIScribe.jsx";
@@ -69,7 +67,6 @@ const adminItems = [
   { to: "/admin/surge", label: "Surge Forecast", icon: LineChart },
   { to: "/admin/live-map", label: "Live Map", icon: Map },
   { to: "/admin/dept-chat", label: "Dept Chat", icon: MessagesSquare },
-  { to: "/admin/emergency", label: "Emergency", icon: ShieldAlert },
 ];
 
 const doctorItems = [
@@ -102,7 +99,6 @@ const App = () => {
         <Route path="surge" element={<SurgePrediction />} />
         <Route path="live-map" element={<LiveMap />} />
         <Route path="dept-chat" element={<DeptChat />} />
-        <Route path="emergency" element={<EmergencyControl />} />
       </Route>
 
       <Route
