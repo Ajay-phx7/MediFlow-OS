@@ -17,6 +17,10 @@ class ScribeRequest(BaseModel):
     patient_age: Optional[int] = None
 
 
+class AppointmentStatusUpdate(BaseModel):
+    status: str
+
+
 @router.get("/dashboard")
 def get_doctor_dashboard(doctor_id: int = None, db: Session = Depends(get_db)):
     """Get doctor dashboard with statistics"""
@@ -100,6 +104,30 @@ async def post_doctor_scribe_audio(
             "error": str(e),
             "message": "Error processing audio file"
         }
+
+
+@router.post("/appointment/{appointment_id}/toggle-completion")
+def toggle_appointment_completion(appointment_id: int, db: Session = Depends(get_db)):
+    """
+    Toggle appointment completion status
+    
+    Changes status from Completed to Scheduled or vice versa
+    """
+    return DoctorService.toggle_appointment_completion(db, appointment_id)
+
+
+@router.put("/appointment/{appointment_id}/status")
+def update_appointment_status(
+    appointment_id: int,
+    payload: AppointmentStatusUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update appointment status
+    
+    Valid statuses: Scheduled, In Progress, Completed, Cancelled
+    """
+    return DoctorService.update_appointment_status(db, appointment_id, payload.status)
 
 
 # Made with Bob

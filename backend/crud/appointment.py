@@ -31,6 +31,31 @@ class CRUDAppointment(CRUDBase[Appointment]):
     def get_by_status(self, db: Session, status: str) -> List[Appointment]:
         """Get appointments by status"""
         return db.query(Appointment).filter(Appointment.status == status).all()
+    
+    def update_status(self, db: Session, appointment_id: int, status: str) -> Appointment:
+        """Update appointment status"""
+        appointment = self.get(db, appointment_id)
+        if appointment:
+            appointment.status = status
+            appointment.updated_at = datetime.utcnow()
+            db.commit()
+            db.refresh(appointment)
+        return appointment
+    
+    def toggle_completion(self, db: Session, appointment_id: int) -> Appointment:
+        """Toggle appointment between Completed and Scheduled/In Progress status"""
+        appointment = self.get(db, appointment_id)
+        if appointment:
+            if appointment.status == "Completed":
+                # If completed, change back to Scheduled
+                appointment.status = "Scheduled"
+            else:
+                # If not completed (Scheduled, In Progress, etc.), mark as Completed
+                appointment.status = "Completed"
+            appointment.updated_at = datetime.utcnow()
+            db.commit()
+            db.refresh(appointment)
+        return appointment
 
 
 # Create instance

@@ -134,10 +134,21 @@ class DoctorService:
                     },
                 }
             )
+        
+        # Sort patients by their upcoming appointment time (earliest first)
+        # Patients with upcoming appointments come first, sorted by time
+        # Patients without upcoming appointments come last
+        patients_with_appts = [p for p in patients if p["upcoming_appointment"] is not None]
+        patients_without_appts = [p for p in patients if p["upcoming_appointment"] is None]
+        
+        # Sort patients with appointments by their next appointment time
+        patients_with_appts.sort(key=lambda p: p["summary"]["next_appointment"])
+        
+        sorted_patients = patients_with_appts + patients_without_appts
 
         return {
-            "total": len(patients),
-            "patients": patients,
+            "total": len(sorted_patients),
+            "patients": sorted_patients,
         }
 
     @staticmethod
@@ -239,8 +250,17 @@ class DoctorService:
                     },
                 }
             )
-
-        return patients
+        
+        # Sort patients by their upcoming appointment time (earliest first)
+        # Patients with upcoming appointments come first, sorted by time
+        # Patients without upcoming appointments come last
+        patients_with_appts = [p for p in patients if p["upcoming_appointment"] is not None]
+        patients_without_appts = [p for p in patients if p["upcoming_appointment"] is None]
+        
+        # Sort patients with appointments by their next appointment time
+        patients_with_appts.sort(key=lambda p: p["summary"]["next_appointment"])
+        
+        return patients_with_appts + patients_without_appts
 
     @staticmethod
     def get_doctor_dashboard(db: Session, doctor_id: int = None):
@@ -260,14 +280,19 @@ class DoctorService:
         appointments = db.query(Appointment).filter(Appointment.doctor_id == doctor.id).order_by(desc(Appointment.scheduled_time)).all()
         today = datetime.now().date()
         today_appointments = [a for a in appointments if a.scheduled_time.date() == today]
+        
+        # Sort today's appointments by scheduled time (earliest first) for next patient queue
+        today_appointments_sorted = sorted(today_appointments, key=lambda a: a.scheduled_time)
+        
         completed = len([a for a in today_appointments if a.status == "Completed"])
         pending = len([a for a in today_appointments if a.status in ["Scheduled", "In Progress"]])
 
+        # Get next patient from pending appointments sorted by time
         next_candidates = [
-            a for a in appointments
+            a for a in today_appointments_sorted
             if a.status in ["Scheduled", "In Progress"] and a.scheduled_time >= datetime.now()
         ]
-        next_appt = min(next_candidates, key=lambda appt: appt.scheduled_time, default=None)
+        next_appt = next_candidates[0] if next_candidates else None
         patients = DoctorService._build_patient_summary(db, doctor.id)
         recent_consultations = db.query(Consultation).filter(Consultation.doctor_id == doctor.id).order_by(desc(Consultation.consultation_date)).limit(5).all()
         recent_prescriptions = db.query(Prescription).filter(Prescription.doctor_id == doctor.id).order_by(desc(Prescription.prescribed_date)).limit(5).all()
@@ -287,7 +312,7 @@ class DoctorService:
                     "reason": appt.complaint,
                     "notes": appt.notes,
                 }
-                for appt in today_appointments
+                for appt in today_appointments_sorted
             ],
             "next_patient": {
                 "name": next_appt.patient.name if next_appt and next_appt.patient else "No patients",
@@ -453,6 +478,60 @@ class DoctorService:
                 "error": str(e),
                 "message": "Error processing audio file"
             }
+    
+    @staticmethod
+    def toggle_appointment_completion(db: Session, appointment_id: int):
+        """
+        Toggle appointment completion status
+        
+        Args:
+            db: Database session
+            appointment_id: ID of the appointment to toggle
+            
+        Returns:
+            Dict containing updated appointment details
+        """
+        appointment = appt_crud.toggle_completion(db, appointment_id)
+        
+        if not appointment:
+            return {"error": "Appointment not found"}
+        
+        return {
+            "success": True,
+            "appointment": appointment.to_dict(),
+            "message": f"Appointment status changed to {appointment.status}"
+        }
+    
+    @staticmethod
+    def update_appointment_status(db: Session, appointment_id: int, status: str):
+        """
+        Update appointment status
+        
+        Args:
+            db: Database session
+            appointment_id: ID of the appointment
+            status: New status (Scheduled, In Progress, Completed, Cancelled)
+            
+        Returns:
+            Dict containing updated appointment details
+        """
+        valid_statuses = ["Scheduled", "In Progress", "Completed", "Cancelled"]
+        if status not in valid_statuses:
+            return {
+                "error": "Invalid status",
+                "message": f"Status must be one of: {', '.join(valid_statuses)}"
+            }
+        
+        appointment = appt_crud.update_status(db, appointment_id, status)
+        
+        if not appointment:
+            return {"error": "Appointment not found"}
+        
+        return {
+            "success": True,
+            "appointment": appointment.to_dict(),
+            "message": f"Appointment status updated to {status}"
+        }
 
 
 # Made with Bob
