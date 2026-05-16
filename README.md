@@ -92,9 +92,3 @@ npm run dev
 # runs on http://localhost:5173
 ```
 
-## Notes For AI Agents
-
-- No database or auth: any state changes are local to the UI.
-- CORS is enabled for http://localhost:5173 in backend/main.py.
-- Sidebar collapses to icon-only on small screens.
-- Health report, scribe, and chat are mock data only.
