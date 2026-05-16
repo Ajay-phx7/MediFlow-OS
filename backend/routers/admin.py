@@ -1,6 +1,12 @@
 from fastapi import APIRouter
 
 from mock_data.departments import DEPARTMENTS
+from mock_data.emergency import (
+    EMERGENCY_ALERTS,
+    EMERGENCY_CONTACTS,
+    EMERGENCY_INCIDENTS,
+    EMERGENCY_PROTOCOLS,
+)
 from mock_data.queue import QUEUE
 
 router = APIRouter()
@@ -41,3 +47,23 @@ def get_surge_forecast():
 @router.get("/live-map")
 def get_live_map():
     return {"departments": DEPARTMENTS}
+
+
+@router.get("/emergency/alerts")
+def get_emergency_alerts():
+    return {"alerts": EMERGENCY_ALERTS}
+
+
+@router.get("/emergency/protocols")
+def get_emergency_protocols():
+    return {"protocols": EMERGENCY_PROTOCOLS}
+
+
+@router.get("/emergency/contacts")
+def get_emergency_contacts():
+    return {"contacts": EMERGENCY_CONTACTS}
+
+
+@router.get("/emergency/incidents")
+def get_emergency_incidents():
+    return {"incidents": EMERGENCY_INCIDENTS}

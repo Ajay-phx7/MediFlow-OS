@@ -1,3 +1,7 @@
 fastapi
 uvicorn
 python-multipart
+prophet
+pandas
+numpy
+pytest
