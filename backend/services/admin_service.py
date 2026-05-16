@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from crud import department as dept_crud, queue as queue_crud
 from database.models import Department, QueueEntry
+from ml.surge_model import generate_forecast
 
 
 class AdminService:
@@ -27,20 +28,8 @@ class AdminService:
 
     @staticmethod
     def get_surge_forecast():
-        """Get surge prediction forecast (mock data for now)"""
-        return {
-            "dates": [
-                "2026-05-15",
-                "2026-05-16",
-                "2026-05-17",
-                "2026-05-18",
-                "2026-05-19",
-                "2026-05-20",
-                "2026-05-21",
-            ],
-            "predicted": [98, 115, 132, 89, 142, 160, 104],
-            "threshold": 120,
-        }
+        """Get surge prediction forecast using Prophet ML"""
+        return generate_forecast(7)
 
     @staticmethod
     def get_live_map(db: Session):
