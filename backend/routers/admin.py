@@ -25,5 +25,3 @@ def get_surge_forecast():
 @router.get("/live-map")
 def get_live_map(db: Session = Depends(get_db)):
     return AdminService.get_live_map(db)
-
-# Made with Bob
