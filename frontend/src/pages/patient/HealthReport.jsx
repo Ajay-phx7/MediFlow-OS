@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import Navbar from "../../components/Navbar.jsx";
 import { getPatientHealthReport } from "../../api/index.js";
+import { AppContext } from "../../context/AppContext.jsx";
 
 const HealthReport = () => {
   const [report, setReport] = useState(null);
+  const { selectedPatient } = useContext(AppContext);
 
   useEffect(() => {
-    getPatientHealthReport().then((response) => setReport(response.data));
-  }, []);
+    getPatientHealthReport(selectedPatient?.id).then((response) => setReport(response.data));
+  }, [selectedPatient]);
 
   return (
     <div className="space-y-8">
-      <Navbar title="My Health Report" subtitle="Summary & Labs" />
+      <Navbar title="My Health Report" subtitle={selectedPatient?.name ?? "Summary & Labs"} />
 
       <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6">
         <div>
@@ -38,7 +40,9 @@ const HealthReport = () => {
           <h4 className="text-base font-semibold text-slate-900">Past Diagnoses</h4>
           <ul className="mt-2 text-sm text-slate-600 list-disc list-inside">
             {report?.past_diagnoses?.map((item) => (
-              <li key={item}>{item}</li>
+              <li key={item.diagnosis}>
+                {item.diagnosis}{item.date ? ` (${item.date})` : ""}
+              </li>
             ))}
           </ul>
         </div>

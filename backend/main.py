@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import admin, doctor, patient
+from routers import admin, doctor, patient, websocket_scribe, auth
 
 app = FastAPI(title="MediCore API", version="0.1.0")
 
@@ -13,11 +13,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(doctor.router, prefix="/api/doctor", tags=["doctor"])
 app.include_router(patient.router, prefix="/api/patient", tags=["patient"])
+app.include_router(websocket_scribe.router, prefix="/api", tags=["websocket"])
 
 
 @app.get("/")
 def read_root():
     return {"status": "MediCore API running"}
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint"""
+    try:
+        from config import config
+        return {
+            "status": "healthy",
+            "api_configured": config.is_configured()
+        }
+    except:
+        return {
+            "status": "healthy",
+            "api_configured": False
+        }

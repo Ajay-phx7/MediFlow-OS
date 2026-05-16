@@ -1,0 +1,16 @@
+# Core FastAPI dependencies
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+pydantic>=2.0.0
+
+# AI/ML services
+google-genai
+ibm-watson
+ibm-cloud-sdk-core
+openai
+
+# Database
+sqlalchemy>=2.0.0
+alembic>=1.12.0

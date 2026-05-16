@@ -1,20 +1,22 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import Badge from "../../components/Badge.jsx";
 import Navbar from "../../components/Navbar.jsx";
 import { getDoctorPatients } from "../../api/index.js";
+import { AppContext } from "../../context/AppContext.jsx";
 
 const PatientList = () => {
   const [patients, setPatients] = useState([]);
   const [activePatient, setActivePatient] = useState(null);
+  const { selectedDoctor } = useContext(AppContext);
 
   useEffect(() => {
-    getDoctorPatients().then((response) => setPatients(response.data.patients));
-  }, []);
+    getDoctorPatients(selectedDoctor?.id).then((response) => setPatients(response.data.patients));
+  }, [selectedDoctor]);
 
   return (
     <div className="space-y-8">
-      <Navbar title="My Patients" subtitle="Today's Schedule" />
+      <Navbar title="My Patients" subtitle={selectedDoctor?.name ?? "Today's Schedule"} />
 
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <table className="w-full text-left text-sm">
@@ -29,19 +31,13 @@ const PatientList = () => {
           </thead>
           <tbody>
             {patients.map((patient) => {
-              const tone = patient.status.toLowerCase().includes("waiting")
-                ? "waiting"
-                : patient.status.toLowerCase().includes("consultation")
-                ? "consultation"
-                : "done";
-
               return (
-                <tr key={patient.name} className="border-t border-slate-100">
+                <tr key={patient.id} className="border-t border-slate-100">
                   <td className="px-4 py-3 font-medium text-slate-900">{patient.name}</td>
                   <td className="px-4 py-3 text-slate-600">{patient.age}</td>
-                  <td className="px-4 py-3 text-slate-600">{patient.time}</td>
+                  <td className="px-4 py-3 text-slate-600">{patient.summary?.next_appointment ?? "--"}</td>
                   <td className="px-4 py-3">
-                    <Badge label={patient.status} tone={tone} />
+                    <Badge label={patient.visit_history > 0 ? "Active" : "New"} tone={patient.visit_history > 0 ? "consultation" : "waiting"} />
                   </td>
                   <td className="px-4 py-3">
                     <button
@@ -63,7 +59,9 @@ const PatientList = () => {
           <div className="bg-white rounded-2xl p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-slate-900">{activePatient.name}</h3>
             <p className="text-sm text-slate-500 mt-1">Recent history</p>
-            <p className="text-sm text-slate-600 mt-3">{activePatient.history}</p>
+            <p className="text-sm text-slate-600 mt-3">Conditions: {activePatient.existing_conditions?.join(", ") || "None"}</p>
+            <p className="text-sm text-slate-600 mt-2">Current medications: {activePatient.current_medications?.map((med) => med.name).join(", ") || "None"}</p>
+            <p className="text-sm text-slate-600 mt-2">Latest SOAP note: {activePatient.latest_consultation?.soap_notes ?? "No consultation available"}</p>
             <button
               className="mt-6 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold"
               onClick={() => setActivePatient(null)}

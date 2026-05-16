@@ -1,43 +1,29 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
-from mock_data.departments import DEPARTMENTS
-from mock_data.queue import QUEUE
+from database.connection import get_db
+from services.admin_service import AdminService
 
 router = APIRouter()
 
 
 @router.get("/stats")
-def get_admin_stats():
-    return {
-        "total_patients_today": 142,
-        "avg_wait_time_min": 24,
-        "beds_available": 38,
-        "departments_on_alert": 2,
-    }
+def get_admin_stats(db: Session = Depends(get_db)):
+    return AdminService.get_admin_stats(db)
 
 
 @router.get("/queue")
-def get_queue():
-    return {"queue": QUEUE}
+def get_queue(db: Session = Depends(get_db)):
+    return AdminService.get_queue(db)
 
 
 @router.get("/surge-forecast")
 def get_surge_forecast():
-    return {
-        "dates": [
-            "2026-05-15",
-            "2026-05-16",
-            "2026-05-17",
-            "2026-05-18",
-            "2026-05-19",
-            "2026-05-20",
-            "2026-05-21",
-        ],
-        "predicted": [98, 115, 132, 89, 142, 160, 104],
-        "threshold": 120,
-    }
+    return AdminService.get_surge_forecast()
 
 
 @router.get("/live-map")
-def get_live_map():
-    return {"departments": DEPARTMENTS}
+def get_live_map(db: Session = Depends(get_db)):
+    return AdminService.get_live_map(db)
+
+# Made with Bob

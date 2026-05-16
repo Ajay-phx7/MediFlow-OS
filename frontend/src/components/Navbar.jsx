@@ -1,6 +1,15 @@
 import { Bell, UserCircle } from "lucide-react";
+import { useContext } from "react";
+
+import { AppContext } from "../context/AppContext.jsx";
 
 const Navbar = ({ title, subtitle }) => {
+  const { activeRole, selectedDoctor, selectedPatient } = useContext(AppContext);
+  const displayName =
+    (activeRole === "doctor" && selectedDoctor?.name) ||
+    (activeRole === "patient" && selectedPatient?.name) ||
+    "Demo User";
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
@@ -13,7 +22,7 @@ const Navbar = ({ title, subtitle }) => {
         </button>
         <div className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5">
           <UserCircle className="h-5 w-5 text-slate-500" />
-          <span className="text-sm text-slate-700">Demo User</span>
+          <span className="text-sm text-slate-700">{displayName}</span>
         </div>
       </div>
     </div>

@@ -1,100 +1,90 @@
-# MediCore
+# MediFlow OS
 
-MediCore is a full-stack MVP Hospital Management Platform built as a dummy prototype.
-It uses hardcoded mock data only (no database, no authentication). The goal is to
-show structure, routing, and UI for three roles: Admin, Doctor, and Patient.
+MediFlow OS is a full-stack Hospital Management Platform with AI-powered medical scribe features.
+
+## 🆕 AI-Powered Medical Scribe
+
+Live audio recording → Real-time transcription → Automatic SOAP notes & prescriptions
+
+📖 **[Full Documentation](README_AI_SCRIBE.md)** | 🚀 **[Setup Guide](SETUP_GUIDE.md)**
 
 ## Tech Stack
 
-- Frontend: React 18 + Vite + React Router v6 + Tailwind CSS
-- Backend: FastAPI (Python)
-- State: React useState / useContext only
-- HTTP: Axios (frontend calls FastAPI endpoints)
-- Charts: Recharts
-- Icons: Lucide React
+- **Frontend**: React 18 + Vite + Tailwind CSS
+- **Backend**: FastAPI (Python) + WebSocket
+- **AI**: IBM Watson Speech-to-Text + OpenAI GPT-4o-mini
 
 ## Project Structure
 
 ```
 backend/
-	main.py
-	routers/
-		admin.py
-		doctor.py
-		patient.py
-	mock_data/
-		patients.py
-		doctors.py
-		queue.py
-		departments.py
-	requirements.txt
+	main.py, config.py, requirements.txt
+	routers/          # API endpoints
+	services/         # Business logic + AI integration
+	mock_data/        # Demo data
 
 frontend/
-	index.html
-	vite.config.js
-	tailwind.config.js
 	src/
-		App.jsx
-		main.jsx
-		api/index.js
-		context/AppContext.jsx
-		pages/
-			Home.jsx
-			admin/
-			doctor/
-			patient/
-		components/
+		pages/        # Admin, Doctor, Patient dashboards
+		components/   # Reusable UI components
 ```
 
-## Frontend Routes
+## Quick Start
 
-- / -> Role selector landing page
-- /admin -> Admin dashboard, queue, surge forecast, live map, dept chat
-- /doctor -> Doctor dashboard, patients list, AI scribe
-- /patient -> Patient dashboard, booking, live map, health report
+### Demo Mode (No API Keys)
+```bash
+# Backend
+cd backend
+pip install fastapi uvicorn python-multipart
+uvicorn main:app --reload
 
-## Backend Endpoints (Mock JSON)
+# Frontend
+cd frontend
+npm install && npm run dev
+```
 
-All endpoints return hardcoded JSON from the mock_data module.
-
-- GET /api/admin/stats
-- GET /api/admin/queue
-- GET /api/admin/surge-forecast
-- GET /api/admin/live-map
-- GET /api/doctor/dashboard
-- GET /api/doctor/patients
-- POST /api/doctor/scribe
-- GET /api/patient/dashboard
-- GET /api/patient/health-report
-
-## Mock Data Highlights
-
-- Queue: Aisha Khan (T-001, Emergency), Ravi Kumar (T-002, Cardiology), Priya Mehta (T-003, OPD)
-- Live map: Emergency, ICU, OPD, Cardiology, Orthopaedics, Paediatrics with congestion badges
-- Surge forecast: next 7 days predicted = [98, 115, 132, 89, 142, 160, 104], threshold = 120
-
-## Run Instructions
-
-### Backend
-
+### Full AI Mode
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+
+# Create .env with API keys (see .env.example)
+uvicorn main:app --reload
 ```
 
-### Frontend
+Access at: http://localhost:5173
 
-```bash
-cd frontend
-npm install
-npm run dev
-# runs on http://localhost:5173
-```
+## API Endpoints
 
-## Notes For AI Agents
+**Mock Data:**
+- `GET /api/admin/*` - Admin dashboard, queue, surge forecast, live map
+- `GET /api/doctor/*` - Doctor dashboard, patients list
+- `GET /api/patient/*` - Patient dashboard, health report
 
-- No database or auth: any state changes are local to the UI.
-- CORS is enabled for http://localhost:5173 in backend/main.py.
-- Sidebar collapses to icon-only on small screens.
-- Health report, scribe, and chat are mock data only.
+**AI Features:**
+- `POST /api/doctor/scribe` - Text transcript → SOAP notes + prescription
+- `POST /api/doctor/scribe/audio` - Audio file → Transcription + documents
+- `WS /api/ws/scribe/{id}` - Real-time audio streaming
+
+## Features
+
+**Admin**: Queue management, surge prediction, live congestion map  
+**Doctor**: Patient list, AI scribe (audio recording, transcription, SOAP notes, prescriptions)  
+**Patient**: Appointment booking, health reports, wait time estimates
+
+## Documentation
+
+- [AI Scribe Documentation](README_AI_SCRIBE.md) - Complete feature guide
+- [Setup Guide](SETUP_GUIDE.md) - Installation & troubleshooting
+- [API Docs](http://localhost:8000/docs) - Interactive API documentation
+
+## Notes
+
+- No database or auth (demo purposes)
+- AI features work with mock data when API keys not configured
+- CORS enabled for localhost:5173
+- Requires HTTPS in production for microphone access
+
+---
+
+**Made with Bob** 🤖

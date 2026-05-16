@@ -25,6 +25,10 @@ import PatientDashboard from "./pages/patient/PatientDashboard.jsx";
 import BookAppointment from "./pages/patient/BookAppointment.jsx";
 import CongestionMap from "./pages/patient/CongestionMap.jsx";
 import HealthReport from "./pages/patient/HealthReport.jsx";
+import DoctorLogin from "./pages/doctor/DoctorLogin.jsx";
+import PatientLogin from "./pages/patient/PatientLogin.jsx";
+import { AppContext } from "./context/AppContext.jsx";
+import { useContext } from "react";
 
 const RoleLayout = ({ title, items }) => {
   return (
@@ -35,6 +39,26 @@ const RoleLayout = ({ title, items }) => {
       </main>
     </div>
   );
+};
+
+const DoctorRoute = ({ children }) => {
+  const { selectedDoctor } = useContext(AppContext);
+
+  if (!selectedDoctor) {
+    return <Navigate to="/doctor/login" replace />;
+  }
+
+  return children;
+};
+
+const PatientRoute = ({ children }) => {
+  const { selectedPatient } = useContext(AppContext);
+
+  if (!selectedPatient) {
+    return <Navigate to="/patient/login" replace />;
+  }
+
+  return children;
 };
 
 const adminItems = [
@@ -63,6 +87,9 @@ const App = () => {
     <Routes>
       <Route path="/" element={<Home />} />
 
+      <Route path="/doctor/login" element={<DoctorLogin />} />
+      <Route path="/patient/login" element={<PatientLogin />} />
+
       <Route
         path="/admin"
         element={<RoleLayout title="Admin / Reception" items={adminItems} />}
@@ -78,19 +105,19 @@ const App = () => {
         path="/doctor"
         element={<RoleLayout title="Doctor" items={doctorItems} />}
       >
-        <Route index element={<DoctorDashboard />} />
-        <Route path="patients" element={<PatientList />} />
-        <Route path="ai-scribe" element={<AIScribe />} />
+        <Route index element={<DoctorRoute><DoctorDashboard /></DoctorRoute>} />
+        <Route path="patients" element={<DoctorRoute><PatientList /></DoctorRoute>} />
+        <Route path="ai-scribe" element={<DoctorRoute><AIScribe /></DoctorRoute>} />
       </Route>
 
       <Route
         path="/patient"
         element={<RoleLayout title="Patient" items={patientItems} />}
       >
-        <Route index element={<PatientDashboard />} />
-        <Route path="book" element={<BookAppointment />} />
-        <Route path="live-map" element={<CongestionMap />} />
-        <Route path="health-report" element={<HealthReport />} />
+        <Route index element={<PatientRoute><PatientDashboard /></PatientRoute>} />
+        <Route path="book" element={<PatientRoute><BookAppointment /></PatientRoute>} />
+        <Route path="live-map" element={<PatientRoute><CongestionMap /></PatientRoute>} />
+        <Route path="health-report" element={<PatientRoute><HealthReport /></PatientRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

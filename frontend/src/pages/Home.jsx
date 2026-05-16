@@ -14,16 +14,16 @@ const ROLE_CARDS = [
   },
   {
     title: "Doctor",
-    description: "Review patients, document visits, and create notes.",
+    description: "Select a doctor profile and open the connected workspace.",
     icon: Stethoscope,
-    to: "/doctor",
+    to: "/doctor/login",
     role: "doctor",
   },
   {
     title: "Patient",
-    description: "Track appointments, congestion, and health report.",
+    description: "Search your profile and view only your own records.",
     icon: UserRound,
-    to: "/patient",
+    to: "/patient/login",
     role: "patient",
   },
 ];
