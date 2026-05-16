@@ -9,12 +9,19 @@ const PatientDashboard = () => {
   const { selectedPatient } = useContext(AppContext);
 
   useEffect(() => {
-    getPatientDashboard(selectedPatient?.id).then((response) => setData(response.data));
+    if (!selectedPatient?.id) {
+      return;
+    }
+    getPatientDashboard(selectedPatient.id).then((response) => setData(response.data));
   }, [selectedPatient]);
 
   return (
     <div className="space-y-8">
-      <Navbar title="Patient Dashboard" subtitle={selectedPatient?.name ?? "Welcome Back"} />
+      <Navbar
+        title="Patient Dashboard"
+        subtitle={selectedPatient?.name ?? "Welcome Back"}
+        displayName={data?.patient?.name ?? selectedPatient?.name}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-6">
@@ -57,7 +64,6 @@ const PatientDashboard = () => {
               <div key={prescription.id} className="rounded-2xl bg-slate-50 p-4">
                 <p className="font-semibold text-slate-900">{prescription.doctor}</p>
                 <p className="text-sm text-slate-500 mt-1">{prescription.date}</p>
-                <p className="text-sm text-slate-600 mt-2">{prescription.notes}</p>
                 <p className="text-xs text-slate-500 mt-2">
                   {prescription.medications?.map((med) => `${med.name} ${med.dosage}`).join(" • ")}
                 </p>
@@ -73,9 +79,81 @@ const PatientDashboard = () => {
               <div key={consultation.id} className="rounded-2xl bg-slate-50 p-4">
                 <p className="font-semibold text-slate-900">{consultation.doctor}</p>
                 <p className="text-sm text-slate-500 mt-1">{consultation.date}</p>
-                <p className="text-sm text-slate-600 mt-2 whitespace-pre-line">{consultation.soap_notes ?? consultation.notes}</p>
+                <p className="text-sm text-slate-600 mt-2">{consultation.summary}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Appointments Section */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-slate-900">My Appointments</h3>
+          <a
+            href="/patient/book-appointment"
+            className="text-sm text-blue-600 hover:text-blue-700 font-semibold"
+          >
+            Book New Appointment →
+          </a>
+        </div>
+        
+        {/* Upcoming Appointments */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-slate-700 mb-3">Upcoming</h4>
+          <div className="space-y-3">
+            {data?.upcoming_appointments && data.upcoming_appointments.length > 0 ? (
+              data.upcoming_appointments.map((appt) => (
+                <div key={appt.id} className="rounded-xl bg-blue-50 border border-blue-200 p-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-semibold text-slate-900">{appt.doctor}</p>
+                      <p className="text-sm text-slate-600 mt-1">{appt.department}</p>
+                      <p className="text-sm text-slate-500 mt-2">
+                        {appt.date} at {appt.time}
+                      </p>
+                      {appt.complaint && (
+                        <p className="text-sm text-slate-600 mt-2">
+                          <span className="font-medium">Reason:</span> {appt.complaint}
+                        </p>
+                      )}
+                    </div>
+                    <span className="px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+                      {appt.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">No upcoming appointments</p>
+            )}
+          </div>
+        </div>
+
+        {/* Past Appointments */}
+        <div>
+          <h4 className="text-sm font-semibold text-slate-700 mb-3">Past Appointments</h4>
+          <div className="space-y-3">
+            {data?.past_appointments && data.past_appointments.length > 0 ? (
+              data.past_appointments.slice(0, 3).map((appt) => (
+                <div key={appt.id} className="rounded-xl bg-slate-50 p-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-semibold text-slate-900">{appt.doctor}</p>
+                      <p className="text-sm text-slate-500 mt-1">{appt.date}</p>
+                      {appt.complaint && (
+                        <p className="text-sm text-slate-600 mt-2">{appt.complaint}</p>
+                      )}
+                    </div>
+                    <span className="px-3 py-1 text-xs font-semibold text-slate-600 bg-slate-200 rounded-full">
+                      {appt.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">No past appointments</p>
+            )}
           </div>
         </div>
       </div>

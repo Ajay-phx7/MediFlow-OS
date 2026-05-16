@@ -1,9 +1,11 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from crud import patient as patient_crud, appointment as appt_crud
+from datetime import datetime, date
+from typing import Optional, List, Dict
+from crud import patient as patient_crud, appointment as appt_crud, doctor as doctor_crud
 from database.models import (
     Patient, Medication, MedicalRecord, LabResult, Vaccination,
-    Appointment, Prescription, Consultation
+    Appointment, Prescription, Consultation, Doctor
 )
 
 
@@ -25,17 +27,16 @@ class PatientService:
             Appointment.patient_id == patient.id
         ).order_by(desc(Appointment.scheduled_time)).all()
         
-        # Get upcoming appointments
-        from datetime import datetime
+        # Get upcoming and past appointments by date
+        today = date.today()
         upcoming_appointments = sorted(
-            [a for a in all_appointments if a.scheduled_time > datetime.now() and a.status == "Scheduled"],
+            [a for a in all_appointments if a.scheduled_time.date() >= today],
             key=lambda appt: appt.scheduled_time,
         )
-        
-        # Get past appointments
+
         past_appointments = [
             a for a in all_appointments
-            if a.status == "Completed"
+            if a.scheduled_time.date() < today
         ]
         
         # Get current medications
@@ -97,8 +98,8 @@ class PatientService:
                     "date": appt.scheduled_time.strftime("%Y-%m-%d"),
                     "time": appt.scheduled_time.strftime("%I:%M %p"),
                     "complaint": appt.complaint,
-                    "status": appt.status,
-                    "notes": appt.notes,
+                    "status": appt.get_computed_status(),
+                    # Notes excluded for patient privacy - only doctors can see notes
                 }
                 for appt in upcoming_appointments[:3]
             ],
@@ -108,8 +109,8 @@ class PatientService:
                     "doctor": appt.doctor.name if appt.doctor else "N/A",
                     "date": appt.scheduled_time.strftime("%Y-%m-%d"),
                     "complaint": appt.complaint,
-                    "status": appt.status,
-                    "notes": appt.notes,
+                    "status": appt.get_computed_status(),
+                    # Notes excluded for patient privacy - only doctors can see notes
                 }
                 for appt in past_appointments[:5]
             ],
@@ -143,8 +144,8 @@ class PatientService:
                     "id": c.id,
                     "doctor": c.doctor.name if c.doctor else "N/A",
                     "date": c.consultation_date.strftime("%Y-%m-%d"),
-                    "soap_notes": c.soap_notes,
-                    "notes": c.soap_notes[:200] + "..." if c.soap_notes and len(c.soap_notes) > 200 else c.soap_notes
+                    # SOAP notes excluded for patient privacy - only doctors can see detailed consultation notes
+                    "summary": "Consultation completed"
                 }
                 for c in consultations
             ],
@@ -207,6 +208,199 @@ class PatientService:
             "vaccinations": [
                 f"{v.vaccine_name} ({v.vaccination_date.year})" for v in vaccinations
             ],
+        }
+    
+    @staticmethod
+    def get_available_doctors(db: Session) -> List[Dict]:
+        """Get list of all available doctors for appointment booking"""
+        doctors = db.query(Doctor).filter(Doctor.is_available == True).all()
+        return [
+            {
+                "id": doctor.id,
+                "name": doctor.name,
+                "specialization": doctor.specialization,
+                "department": doctor.department.name if doctor.department else "N/A",
+                "department_id": doctor.department_id
+            }
+            for doctor in doctors
+        ]
+    
+    @staticmethod
+    def get_available_slots(db: Session, doctor_id: int, appointment_date: str) -> Dict:
+        """
+        Get available time slots for a doctor on a specific date
+        
+        Args:
+            db: Database session
+            doctor_id: ID of the doctor
+            appointment_date: Date in YYYY-MM-DD format
+            
+        Returns:
+            Dict with doctor info and available slots
+        """
+        doctor = doctor_crud.get(db, doctor_id)
+        if not doctor:
+            return {"error": "Doctor not found"}
+        
+        try:
+            target_date = datetime.strptime(appointment_date, "%Y-%m-%d").date()
+        except ValueError:
+            return {"error": "Invalid date format. Use YYYY-MM-DD"}
+        
+        # Don't allow booking for past dates
+        if target_date < date.today():
+            return {"error": "Cannot book appointments for past dates"}
+        
+        available_slots = appt_crud.get_available_slots(db, doctor_id, target_date)
+        
+        return {
+            "doctor": {
+                "id": doctor.id,
+                "name": doctor.name,
+                "specialization": doctor.specialization,
+                "department": doctor.department.name if doctor.department else "N/A"
+            },
+            "date": appointment_date,
+            "available_slots": available_slots
+        }
+    
+    @staticmethod
+    def book_appointment(
+        db: Session,
+        patient_id: int,
+        doctor_id: int,
+        appointment_date: str,
+        appointment_time: str,
+        complaint: Optional[str] = None
+    ) -> Dict:
+        """
+        Book an appointment for a patient
+        
+        Args:
+            db: Database session
+            patient_id: ID of the patient
+            doctor_id: ID of the doctor
+            appointment_date: Date in YYYY-MM-DD format
+            appointment_time: Time in HH:MM format
+            complaint: Optional complaint/reason for visit
+            
+        Returns:
+            Dict with appointment details or error
+        """
+        # Validate patient
+        patient = patient_crud.get(db, patient_id)
+        if not patient:
+            return {"error": "Patient not found"}
+        
+        # Validate doctor
+        doctor = doctor_crud.get(db, doctor_id)
+        if not doctor:
+            return {"error": "Doctor not found"}
+        
+        # Parse and validate date/time
+        try:
+            target_date = datetime.strptime(appointment_date, "%Y-%m-%d").date()
+            target_time = datetime.strptime(appointment_time, "%H:%M").time()
+            scheduled_datetime = datetime.combine(target_date, target_time)
+        except ValueError:
+            return {"error": "Invalid date or time format"}
+        
+        # Don't allow booking for past dates/times
+        if scheduled_datetime < datetime.now():
+            return {"error": "Cannot book appointments in the past"}
+        
+        # Prevent duplicate appointments for the same patient on the same date
+        day_start = datetime.combine(target_date, datetime.min.time())
+        day_end = datetime.combine(target_date, datetime.max.time())
+        existing_patient_appt = db.query(Appointment).filter(
+            Appointment.patient_id == patient_id,
+            Appointment.scheduled_time >= day_start,
+            Appointment.scheduled_time <= day_end,
+            Appointment.status != "Cancelled"
+        ).first()
+        if existing_patient_appt:
+            return {"error": "Patient already has an appointment on this date"}
+
+        # Check if slot is available
+        available_slots = appt_crud.get_available_slots(db, doctor_id, target_date)
+        if appointment_time not in available_slots:
+            return {"error": "Selected time slot is not available"}
+        
+        # Create appointment
+        appointment = appt_crud.create_appointment(
+            db=db,
+            patient_id=patient_id,
+            doctor_id=doctor_id,
+            scheduled_time=scheduled_datetime,
+            complaint=complaint
+        )
+        
+        return {
+            "success": True,
+            "message": "Appointment booked successfully",
+            "appointment": {
+                "id": appointment.id,
+                "patient_name": patient.name,
+                "doctor_name": doctor.name,
+                "doctor_specialization": doctor.specialization,
+                "department": doctor.department.name if doctor.department else "N/A",
+                "date": appointment_date,
+                "time": appointment_time,
+                "status": appointment.status,
+                "complaint": appointment.complaint
+            }
+        }
+    
+    @staticmethod
+    def get_patient_appointments(db: Session, patient_id: int) -> Dict:
+        """
+        Get all appointments for a patient with computed status
+        
+        Args:
+            db: Database session
+            patient_id: ID of the patient
+            
+        Returns:
+            Dict with upcoming and past appointments
+        """
+        patient = patient_crud.get(db, patient_id)
+        if not patient:
+            return {"error": "Patient not found"}
+        
+        all_appointments = appt_crud.get_by_patient(db, patient_id)
+        
+        today = date.today()
+        upcoming = []
+        past = []
+        
+        for appt in all_appointments:
+            appt_date = appt.scheduled_time.date()
+            computed_status = appt.get_computed_status()
+            
+            appt_dict = {
+                "id": appt.id,
+                "doctor_name": appt.doctor.name if appt.doctor else "N/A",
+                "doctor_specialization": appt.doctor.specialization if appt.doctor else "N/A",
+                "department": appt.doctor.department.name if appt.doctor and appt.doctor.department else "N/A",
+                "date": appt.scheduled_time.strftime("%Y-%m-%d"),
+                "time": appt.scheduled_time.strftime("%I:%M %p"),
+                "status": computed_status,
+                "complaint": appt.complaint
+                # Notes field excluded - only doctors can see appointment notes
+            }
+            
+            if appt_date >= today:
+                upcoming.append(appt_dict)
+            else:
+                past.append(appt_dict)
+        
+        return {
+            "patient": {
+                "id": patient.id,
+                "name": patient.name
+            },
+            "upcoming_appointments": sorted(upcoming, key=lambda x: x["date"]),
+            "past_appointments": sorted(past, key=lambda x: x["date"], reverse=True)
         }
 
 

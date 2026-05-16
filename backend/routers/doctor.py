@@ -1,6 +1,7 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends
+from fastapi import APIRouter, UploadFile, File, Form, Depends, Header, HTTPException
 from pydantic import BaseModel
 from typing import Optional
+from datetime import date
 from sqlalchemy.orm import Session
 import os
 import tempfile
@@ -9,6 +10,31 @@ from database.connection import get_db
 from services.doctor_service import DoctorService
 
 router = APIRouter()
+
+
+def _require_doctor_access(doctor_id: int, x_user_role: str, x_user_id: str) -> int:
+    if not x_user_role or not x_user_id:
+        raise HTTPException(status_code=401, detail="Missing authentication headers")
+    if x_user_role.lower() != "doctor":
+        raise HTTPException(status_code=403, detail="Doctor access required")
+    try:
+        header_id = int(x_user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user id header")
+    if header_id != doctor_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return header_id
+
+
+def _require_doctor_header(x_user_role: str, x_user_id: str) -> int:
+    if not x_user_role or not x_user_id:
+        raise HTTPException(status_code=401, detail="Missing authentication headers")
+    if x_user_role.lower() != "doctor":
+        raise HTTPException(status_code=403, detail="Doctor access required")
+    try:
+        return int(x_user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user id header")
 
 
 class ScribeRequest(BaseModel):
@@ -22,14 +48,26 @@ class AppointmentStatusUpdate(BaseModel):
 
 
 @router.get("/dashboard")
-def get_doctor_dashboard(doctor_id: int = None, db: Session = Depends(get_db)):
+def get_doctor_dashboard(
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None)
+):
     """Get doctor dashboard with statistics"""
+    _require_doctor_access(doctor_id, x_user_role, x_user_id)
     return DoctorService.get_doctor_dashboard(db, doctor_id)
 
 
 @router.get("/patients")
-def get_doctor_patients(doctor_id: int = None, db: Session = Depends(get_db)):
+def get_doctor_patients(
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None)
+):
     """Get comprehensive patient list for a doctor"""
+    _require_doctor_access(doctor_id, x_user_role, x_user_id)
     return DoctorService.get_doctor_patients(db, doctor_id)
 
 
@@ -107,27 +145,69 @@ async def post_doctor_scribe_audio(
 
 
 @router.post("/appointment/{appointment_id}/toggle-completion")
-def toggle_appointment_completion(appointment_id: int, db: Session = Depends(get_db)):
+def toggle_appointment_completion(
+    appointment_id: int,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None)
+):
     """
     Toggle appointment completion status
     
     Changes status from Completed to Scheduled or vice versa
     """
-    return DoctorService.toggle_appointment_completion(db, appointment_id)
+    doctor_id = _require_doctor_header(x_user_role, x_user_id)
+    return DoctorService.toggle_appointment_completion(db, appointment_id, doctor_id)
 
 
 @router.put("/appointment/{appointment_id}/status")
 def update_appointment_status(
     appointment_id: int,
     payload: AppointmentStatusUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None)
 ):
     """
     Update appointment status
     
     Valid statuses: Scheduled, In Progress, Completed, Cancelled
     """
-    return DoctorService.update_appointment_status(db, appointment_id, payload.status)
+    doctor_id = _require_doctor_header(x_user_role, x_user_id)
+    return DoctorService.update_appointment_status(db, appointment_id, payload.status, doctor_id)
+
+
+@router.get("/appointments-by-status")
+def get_doctor_appointments_by_status(
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None)
+):
+    """
+    Get doctor's appointments categorized by computed status (Active/Completed)
+    
+    Active: Appointments scheduled for today that are not manually completed
+    Completed: Past appointments or manually completed appointments
+    """
+    _require_doctor_access(doctor_id, x_user_role, x_user_id)
+    return DoctorService.get_doctor_appointments_with_status(db, doctor_id)
+
+
+@router.get("/appointments-range")
+def get_doctor_appointments_range(
+    doctor_id: int,
+    start_date: date,
+    end_date: date,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None)
+):
+    """
+    Get doctor's appointments between start and end dates (inclusive)
+    """
+    _require_doctor_access(doctor_id, x_user_role, x_user_id)
+    return DoctorService.get_doctor_appointments_range(db, doctor_id, start_date, end_date)
 
 
 # Made with Bob

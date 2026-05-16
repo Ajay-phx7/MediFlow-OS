@@ -9,7 +9,10 @@ const HealthReport = () => {
   const { selectedPatient } = useContext(AppContext);
 
   useEffect(() => {
-    getPatientHealthReport(selectedPatient?.id).then((response) => setReport(response.data));
+    if (!selectedPatient?.id) {
+      return;
+    }
+    getPatientHealthReport(selectedPatient.id).then((response) => setReport(response.data));
   }, [selectedPatient]);
 
   return (

@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import Dict, Optional
+from datetime import datetime, date
+from typing import Dict, Optional, List
 from sqlalchemy.orm import Session
 from crud import doctor as doctor_crud, appointment as appt_crud
 from database.models import Doctor, Appointment
@@ -480,7 +480,7 @@ class DoctorService:
             }
     
     @staticmethod
-    def toggle_appointment_completion(db: Session, appointment_id: int):
+    def toggle_appointment_completion(db: Session, appointment_id: int, doctor_id: int):
         """
         Toggle appointment completion status
         
@@ -491,10 +491,15 @@ class DoctorService:
         Returns:
             Dict containing updated appointment details
         """
-        appointment = appt_crud.toggle_completion(db, appointment_id)
-        
+        appointment = appt_crud.get(db, appointment_id)
+
         if not appointment:
             return {"error": "Appointment not found"}
+
+        if appointment.doctor_id != doctor_id:
+            return {"error": "Access denied"}
+
+        appointment = appt_crud.toggle_completion(db, appointment_id)
         
         return {
             "success": True,
@@ -503,7 +508,7 @@ class DoctorService:
         }
     
     @staticmethod
-    def update_appointment_status(db: Session, appointment_id: int, status: str):
+    def update_appointment_status(db: Session, appointment_id: int, status: str, doctor_id: int):
         """
         Update appointment status
         
@@ -522,15 +527,109 @@ class DoctorService:
                 "message": f"Status must be one of: {', '.join(valid_statuses)}"
             }
         
-        appointment = appt_crud.update_status(db, appointment_id, status)
-        
+        appointment = appt_crud.get(db, appointment_id)
+
         if not appointment:
             return {"error": "Appointment not found"}
+
+        if appointment.doctor_id != doctor_id:
+            return {"error": "Access denied"}
+
+        appointment = appt_crud.update_status(db, appointment_id, status)
         
         return {
             "success": True,
             "appointment": appointment.to_dict(),
             "message": f"Appointment status updated to {status}"
+        }
+    
+    @staticmethod
+    def get_doctor_appointments_with_status(db: Session, doctor_id: int) -> Dict:
+        """
+        Get doctor's appointments categorized by computed status (Active/Completed)
+        
+        Args:
+            db: Database session
+            doctor_id: ID of the doctor
+            
+        Returns:
+            Dict with active and completed appointments
+        """
+        doctor = doctor_crud.get(db, doctor_id)
+        if not doctor:
+            return {"error": "Doctor not found"}
+        
+        all_appointments = appt_crud.get_by_doctor(db, doctor_id)
+        
+        active_appointments = []
+        completed_appointments = []
+        
+        for appt in all_appointments:
+            computed_status = appt.get_computed_status()
+            
+            appt_dict = {
+                "id": appt.id,
+                "patient_id": appt.patient_id,
+                "patient_name": appt.patient.name if appt.patient else "N/A",
+                "patient_age": appt.patient.age if appt.patient else 0,
+                "patient_phone": appt.patient.phone if appt.patient else "N/A",
+                "date": appt.scheduled_time.strftime("%Y-%m-%d"),
+                "time": appt.scheduled_time.strftime("%I:%M %p"),
+                "complaint": appt.complaint,
+                "status": computed_status,
+                "db_status": appt.status,  # Original database status
+                "notes": appt.notes  # Doctor can see notes
+            }
+            
+            if computed_status == "Active":
+                active_appointments.append(appt_dict)
+            else:
+                completed_appointments.append(appt_dict)
+        
+        return {
+            "doctor": {
+                "id": doctor.id,
+                "name": doctor.name,
+                "specialization": doctor.specialization
+            },
+            "active_appointments": sorted(active_appointments, key=lambda x: x["date"] + " " + x["time"]),
+            "completed_appointments": sorted(completed_appointments, key=lambda x: x["date"] + " " + x["time"], reverse=True)
+        }
+
+    @staticmethod
+    def get_doctor_appointments_range(db: Session, doctor_id: int, start_date: date, end_date: date) -> Dict:
+        """
+        Get doctor appointments within a date range for calendar views.
+        """
+        doctor = doctor_crud.get(db, doctor_id)
+        if not doctor:
+            return {"error": "Doctor not found"}
+
+        appointments = appt_crud.get_by_doctor_between(db, doctor_id, start_date, end_date)
+
+        items = []
+        for appt in appointments:
+            if appt.status == "Cancelled":
+                continue
+            items.append(
+                {
+                    "id": appt.id,
+                    "date": appt.scheduled_time.strftime("%Y-%m-%d"),
+                    "time": appt.scheduled_time.strftime("%I:%M %p"),
+                    "patient_name": appt.patient.name if appt.patient else "N/A",
+                    "status": appt.status,
+                }
+            )
+
+        return {
+            "doctor": {
+                "id": doctor.id,
+                "name": doctor.name,
+                "specialization": doctor.specialization,
+            },
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d"),
+            "appointments": items,
         }
 
 

@@ -3,9 +3,10 @@ import { useContext } from "react";
 
 import { AppContext } from "../context/AppContext.jsx";
 
-const Navbar = ({ title, subtitle }) => {
+const Navbar = ({ title, subtitle, displayName }) => {
   const { activeRole, selectedDoctor, selectedPatient } = useContext(AppContext);
-  const displayName =
+  const resolvedName =
+    displayName ||
     (activeRole === "doctor" && selectedDoctor?.name) ||
     (activeRole === "patient" && selectedPatient?.name) ||
     "Demo User";
@@ -22,7 +23,7 @@ const Navbar = ({ title, subtitle }) => {
         </button>
         <div className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5">
           <UserCircle className="h-5 w-5 text-slate-500" />
-          <span className="text-sm text-slate-700">{displayName}</span>
+          <span className="text-sm text-slate-700">{resolvedName}</span>
         </div>
       </div>
     </div>

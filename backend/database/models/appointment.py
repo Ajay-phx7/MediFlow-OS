@@ -4,7 +4,7 @@ Appointment model for MediFlow OS
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, date
 from database.connection import Base
 
 
@@ -32,9 +32,33 @@ class Appointment(Base):
     def __repr__(self):
         return f"<Appointment(id={self.id}, patient='{self.patient.name if self.patient else None}', doctor='{self.doctor.name if self.doctor else None}', status='{self.status}')>"
 
-    def to_dict(self):
-        """Convert model to dictionary"""
-        return {
+    def get_computed_status(self):
+        """
+        Compute appointment status based on date and current status.
+        Returns 'Active' for today's and future appointments that are not manually
+        completed or cancelled. Past appointments display as 'Completed'.
+        """
+        if not self.scheduled_time:
+            return self.status
+        
+        today = date.today()
+        appointment_date = self.scheduled_time.date()
+        
+        # Show Active for today and future dates (if not manually completed/cancelled)
+        if appointment_date >= today and self.status not in ["Completed", "Cancelled"]:
+            return "Active"
+        
+        # Past dates or manually completed appointments show as Completed
+        return "Completed"
+
+    def to_dict(self, include_computed_status=False):
+        """
+        Convert model to dictionary
+        
+        Args:
+            include_computed_status: If True, includes computed_status field
+        """
+        result = {
             "id": self.id,
             "patient_id": self.patient_id,
             "patient_name": self.patient.name if self.patient else None,
@@ -47,5 +71,10 @@ class Appointment(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+        
+        if include_computed_status:
+            result["computed_status"] = self.get_computed_status()
+        
+        return result
 
 # Made with Bob
