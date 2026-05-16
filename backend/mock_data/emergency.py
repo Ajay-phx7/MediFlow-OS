@@ -6,10 +6,6 @@ Provides emergency alerts and incident data
 from datetime import datetime, timedelta
 from typing import List, Dict
 
-# ---------------------------------------------------------------------------
-# New-style rich emergency data (used by EmergencyControl panel)
-# ---------------------------------------------------------------------------
-
 # Emergency alert levels
 ALERT_LEVELS = {
     "critical": {"color": "red", "priority": 1},
@@ -123,7 +119,7 @@ EMERGENCY_INCIDENTS = [
     }
 ]
 
-# Emergency response protocols (structured)
+# Emergency response protocols
 EMERGENCY_PROTOCOLS = {
     "surge": {
         "name": "Patient Surge Protocol",
@@ -196,97 +192,6 @@ EMERGENCY_CONTACTS = [
 ]
 
 
-# ---------------------------------------------------------------------------
-# Legacy real-time alert data (used by escalate endpoint)
-# ---------------------------------------------------------------------------
-
-ALERTS = [
-    {
-        "id": "ALT-001",
-        "type": "Cardiac Arrest",
-        "location": "ER Bay 3",
-        "severity": "Critical",
-        "elapsed": "4 min ago",
-        "escalated": False,
-    },
-    {
-        "id": "ALT-002",
-        "type": "Mass Casualty Incoming",
-        "location": "Ambulance Bay",
-        "severity": "High",
-        "elapsed": "2 min ago",
-        "escalated": False,
-        "note": "3 patients ETA 8 min",
-    },
-    {
-        "id": "ALT-003",
-        "type": "ICU Bed Shortage",
-        "location": "ICU Wing B",
-        "severity": "Moderate",
-        "elapsed": "19 min ago",
-        "escalated": False,
-    },
-]
-
-RESOURCES = {
-    "ambulances": [
-        {"id": "AMB-1", "status": "available"},
-        {"id": "AMB-2", "status": "en-route"},
-        {"id": "AMB-3", "status": "available"},
-        {"id": "AMB-4", "status": "en-route"},
-        {"id": "AMB-5", "status": "available"},
-        {"id": "AMB-6", "status": "maintenance"},
-    ],
-    "er_beds": {"free": 4, "total": 12},
-    "on_call_surgeons": 2,
-    "blood_bank": [
-        {"type": "O-", "status": "low"},
-        {"type": "A+", "status": "adequate"},
-        {"type": "B+", "status": "adequate"},
-        {"type": "AB+", "status": "low"},
-    ],
-}
-
-PROTOCOLS = {
-    "Cardiac Arrest": [
-        "Call code blue immediately",
-        "Assign resuscitation team to bay",
-        "Prepare defibrillator and crash cart",
-        "Notify on-call cardiologist",
-        "Clear corridor to ER",
-        "Document time of arrest",
-    ],
-    "Trauma": [
-        "Activate trauma team",
-        "Prepare trauma bay",
-        "Alert radiology for fast-track CT",
-        "Cross-match blood type",
-        "Notify surgical team on standby",
-        "Assign dedicated trauma nurse",
-    ],
-    "Fire": [
-        "Trigger fire alarm",
-        "Evacuate non-ambulatory patients first",
-        "Notify fire department (call 101)",
-        "Shut down HVAC in affected zone",
-        "Account for all staff and patients",
-        "Move critical patients to safe zone",
-    ],
-    "Mass Casualty": [
-        "Activate MCI protocol",
-        "Set up triage area at ambulance bay",
-        "Call in off-duty emergency staff",
-        "Clear OPD for overflow patients",
-        "Coordinate with blood bank for reserves",
-        "Assign media liaison officer",
-    ],
-}
-
-
-# ---------------------------------------------------------------------------
-# Helper functions
-# ---------------------------------------------------------------------------
-
 def get_active_alerts() -> List[Dict]:
     """Get all active emergency alerts"""
     return [alert for alert in EMERGENCY_ALERTS if alert["status"] == "active"]
@@ -316,6 +221,8 @@ def get_protocol(protocol_type: str) -> Dict:
     return EMERGENCY_PROTOCOLS.get(protocol_type, {})
 
 
-def get_emergency_contacts_list() -> List[Dict]:
+def get_emergency_contacts() -> List[Dict]:
     """Get all emergency contact information"""
     return EMERGENCY_CONTACTS
+
+# Made with Bob
