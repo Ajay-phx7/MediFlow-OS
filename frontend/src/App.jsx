@@ -15,6 +15,7 @@ import {
 import Sidebar from "./components/Sidebar.jsx";
 import Home from "./pages/Home.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminLogin from "./pages/admin/AdminLogin.jsx";
 import QueueManager from "./pages/admin/QueueManager.jsx";
 import SurgePrediction from "./pages/admin/SurgePrediction.jsx";
 import LiveMap from "./pages/admin/LiveMap.jsx";
@@ -25,17 +26,30 @@ import PatientList from "./pages/doctor/PatientList.jsx";
 import AIScribe from "./pages/doctor/AIScribe.jsx";
 import PatientDashboard from "./pages/patient/PatientDashboard.jsx";
 import BookAppointment from "./pages/patient/BookAppointment.jsx";
-import CongestionMap from "./pages/patient/CongestionMap.jsx";
 import HealthReport from "./pages/patient/HealthReport.jsx";
 import DoctorLogin from "./pages/doctor/DoctorLogin.jsx";
 import PatientLogin from "./pages/patient/PatientLogin.jsx";
 import { AppContext } from "./context/AppContext.jsx";
 import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 
-const RoleLayout = ({ title, items }) => {
+const RoleLayout = ({ title, items, role }) => {
+  const navigate = useNavigate();
+  const { setActiveRole } = useContext(AppContext);
+
+  const handleRoleChange = (newRole) => {
+    setActiveRole(newRole);
+    navigate(`/${newRole}/login`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      <Sidebar title={title} items={items} />
+      <Sidebar
+        title={title}
+        items={items}
+        currentRole={role}
+        onRoleChange={handleRoleChange}
+      />
       <main className="flex-1 p-6 sm:p-8">
         <Outlet />
       </main>
@@ -67,7 +81,7 @@ const adminItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutGrid, end: true },
   { to: "/admin/queue", label: "Queue", icon: ClipboardList },
   { to: "/admin/surge", label: "Surge Forecast", icon: LineChart },
-  { to: "/admin/live-map", label: "Live Map", icon: Map },
+  { to: "/admin/live-map", label: "Resource Monitoring", icon: Map },
   { to: "/admin/dept-chat", label: "Dept Chat", icon: MessagesSquare },
   { to: "/admin/emergency", label: "Emergency", icon: ShieldAlert },
 ];
@@ -81,7 +95,6 @@ const doctorItems = [
 const patientItems = [
   { to: "/patient", label: "Dashboard", icon: LayoutGrid, end: true },
   { to: "/patient/book", label: "Book Appointment", icon: CalendarCheck },
-  { to: "/patient/live-map", label: "Live Map", icon: Map },
   { to: "/patient/health-report", label: "My Health Report", icon: FileText },
 ];
 
@@ -90,12 +103,13 @@ const App = () => {
     <Routes>
       <Route path="/" element={<Home />} />
 
+      <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/doctor/login" element={<DoctorLogin />} />
       <Route path="/patient/login" element={<PatientLogin />} />
 
       <Route
         path="/admin"
-        element={<RoleLayout title="Admin / Reception" items={adminItems} />}
+        element={<RoleLayout title="Admin / Reception" items={adminItems} role="admin" />}
       >
         <Route index element={<AdminDashboard />} />
         <Route path="queue" element={<QueueManager />} />
@@ -107,7 +121,7 @@ const App = () => {
 
       <Route
         path="/doctor"
-        element={<RoleLayout title="Doctor" items={doctorItems} />}
+        element={<RoleLayout title="Doctor" items={doctorItems} role="doctor" />}
       >
         <Route index element={<DoctorRoute><DoctorDashboard /></DoctorRoute>} />
         <Route path="patients" element={<DoctorRoute><PatientList /></DoctorRoute>} />
@@ -116,11 +130,10 @@ const App = () => {
 
       <Route
         path="/patient"
-        element={<RoleLayout title="Patient" items={patientItems} />}
+        element={<RoleLayout title="Patient" items={patientItems} role="patient" />}
       >
         <Route index element={<PatientRoute><PatientDashboard /></PatientRoute>} />
         <Route path="book" element={<PatientRoute><BookAppointment /></PatientRoute>} />
-        <Route path="live-map" element={<PatientRoute><CongestionMap /></PatientRoute>} />
         <Route path="health-report" element={<PatientRoute><HealthReport /></PatientRoute>} />
       </Route>
 

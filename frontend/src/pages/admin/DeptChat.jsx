@@ -1,89 +1,92 @@
-import { useMemo, useState } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import ChatPanel from "../../components/ChatPanel.jsx";
 import Navbar from "../../components/Navbar.jsx";
+import { AppContext } from "../../context/AppContext.jsx";
+import { getAllChat, sendChatMessage } from "../../api/index.js";
 
 const DeptChat = () => {
-  const departments = ["Pharmacy", "Radiology", "General Ward"];
-  const [activeDepartment, setActiveDepartment] = useState("Pharmacy");
-  const [messages, setMessages] = useState([
-    {
-      sender: "Pharmacy",
-      text: "Restocking antibiotics in 30 mins.",
-      time: "09:30 AM",
-      department: "Pharmacy",
-    },
-    {
-      sender: "Radiology",
-      text: "CT scan backlog cleared, ready for new slots.",
-      time: "09:45 AM",
-      department: "Radiology",
-    },
-    {
-      sender: "General Ward",
-      text: "Two beds freed in ward B2.",
-      time: "10:05 AM",
-      department: "General Ward",
-    },
-  ]);
+  const { selectedAdmin } = useContext(AppContext);
+  const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filtered = useMemo(
-    () => messages.filter((message) => message.department === activeDepartment),
-    [messages, activeDepartment]
-  );
+  // Fetch all messages on mount and set up polling
+  useEffect(() => {
+    fetchMessages();
+    // Set up polling to refresh messages every 3 seconds
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const handleSend = () => {
-    if (!draft.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      {
-        sender: "Admin",
-        text: draft.trim(),
-        time: "Now",
-        department: activeDepartment,
-      },
-    ]);
-    setDraft("");
+  const fetchMessages = async () => {
+    try {
+      const response = await getAllChat();
+      if (response.data.messages) {
+        setMessages(response.data.messages);
+      }
+    } catch (error) {
+      console.error("Failed to fetch messages:", error);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!draft.trim() || !selectedAdmin) return;
+    
+    setIsLoading(true);
+    try {
+      // Send message with the admin's department
+      await sendChatMessage(selectedAdmin.department, selectedAdmin.username, draft.trim());
+      setDraft("");
+      // Immediately fetch updated messages
+      await fetchMessages();
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   return (
     <div className="space-y-8">
-      <Navbar title="Department Chat" subtitle="Internal Messaging" />
+      <Navbar title="Department Chat" subtitle="Inter-Department Communication" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-          {departments.map((dept) => (
-            <button
-              key={dept}
-              className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium transition ${
-                activeDepartment === dept
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-              onClick={() => setActiveDepartment(dept)}
-            >
-              {dept}
-            </button>
-          ))}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col gap-4 max-w-5xl mx-auto">
+        <div className="border-b border-slate-200 pb-3">
+          <h2 className="text-lg font-semibold text-slate-900">All Departments Chat</h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Messages from Pharmacy, Radiology, General Ward, and Administration
+          </p>
         </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col gap-4">
-          <ChatPanel messages={filtered} />
-          <div className="flex gap-3">
-            <input
-              className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder={`Message ${activeDepartment}`}
-            />
-            <button
-              className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold"
-              onClick={handleSend}
-            >
-              Send
-            </button>
-          </div>
+        
+        <ChatPanel
+          messages={messages}
+          currentUsername={selectedAdmin?.username}
+        />
+        
+        <div className="flex gap-3 pt-3 border-t border-slate-200">
+          <input
+            className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+            disabled={isLoading}
+          />
+          <button
+            className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold disabled:opacity-50 hover:bg-blue-700 transition"
+            onClick={handleSend}
+            disabled={isLoading || !draft.trim()}
+          >
+            {isLoading ? "Sending..." : "Send"}
+          </button>
         </div>
       </div>
     </div>

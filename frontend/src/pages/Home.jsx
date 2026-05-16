@@ -45,7 +45,7 @@ const Home = () => {
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
         <div className="text-center">
           <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Hospital Management Platform</p>
-          <h1 className="text-4xl sm:text-5xl font-semibold text-slate-900 mt-4">MediCore</h1>
+          <h1 className="text-4xl sm:text-5xl font-semibold text-slate-900 mt-4">MediFlow-OS</h1>
           <p className="text-base sm:text-lg text-slate-600 mt-4">
             Choose your role to explore the hospital operations dashboard.
           </p>

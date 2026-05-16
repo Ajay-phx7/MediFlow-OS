@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { getEmergencyAlerts } from "../api/index.js";
+import DashboardSwitcher from "./DashboardSwitcher.jsx";
 
-const Sidebar = ({ items, title }) => {
+const Sidebar = ({ items, title, currentRole, onRoleChange }) => {
   const [criticalCount, setCriticalCount] = useState(0);
 
   useEffect(() => {
@@ -28,16 +29,18 @@ const Sidebar = ({ items, title }) => {
   };
   return (
     <aside className="bg-slate-900 text-slate-100 sm:w-64 w-16 min-h-screen flex flex-col">
-      <div className="px-4 py-6 border-b border-slate-800">
+      <div className="px-4 py-6 border-b border-slate-800 space-y-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">
             M
           </div>
           <div className="hidden sm:block">
-            <p className="text-sm uppercase tracking-[0.2em] text-slate-400">MediCore</p>
-            <h1 className="text-lg font-semibold">{title}</h1>
+            <p className="text-sm uppercase tracking-[0.2em] text-slate-400">MediFlow-OS</p>
           </div>
         </div>
+        {currentRole && onRoleChange && (
+          <DashboardSwitcher currentRole={currentRole} onRoleChange={onRoleChange} />
+        )}
       </div>
       <nav className="flex-1 px-2 py-6 space-y-2">
         {items.map((item) => {
@@ -75,7 +78,7 @@ const Sidebar = ({ items, title }) => {
         })}
       </nav>
       <div className="px-4 py-4 text-xs text-slate-500 hidden sm:block">
-        Dummy prototype v0.1
+        Prototype v0.1
       </div>
     </aside>
   );

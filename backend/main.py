@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers import admin, doctor, patient, websocket_scribe, auth
 
-app = FastAPI(title="MediCore API", version="0.1.0")
+app = FastAPI(title="MediFlow-OS API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,7 +22,7 @@ app.include_router(websocket_scribe.router, prefix="/api", tags=["websocket"])
 
 @app.get("/")
 def read_root():
-    return {"status": "MediCore API running"}
+    return {"status": "MediFlow-OS API running"}
 
 
 @app.get("/health")

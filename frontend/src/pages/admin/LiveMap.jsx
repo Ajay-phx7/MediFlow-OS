@@ -13,7 +13,7 @@ const LiveMap = () => {
 
   return (
     <div className="space-y-8">
-      <Navbar title="Live Map" subtitle="Department Congestion" />
+      <Navbar title="Resource Monitoring" subtitle="Department Congestion" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {departments.map((dept) => (

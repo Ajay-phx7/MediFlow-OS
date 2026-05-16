@@ -19,6 +19,7 @@ export const AppProvider = ({ children }) => {
   const [activeRole, setActiveRole] = useState(() => readStoredSelection("mediflow.activeRole") ?? "admin");
   const [selectedDoctor, setSelectedDoctorState] = useState(() => readStoredSelection("mediflow.selectedDoctor"));
   const [selectedPatient, setSelectedPatientState] = useState(() => readStoredSelection("mediflow.selectedPatient"));
+  const [selectedAdmin, setSelectedAdminState] = useState(() => readStoredSelection("mediflow.selectedAdmin"));
 
   useEffect(() => {
     window.localStorage.setItem("mediflow.activeRole", JSON.stringify(activeRole));
@@ -40,6 +41,14 @@ export const AppProvider = ({ children }) => {
     }
   }, [selectedPatient]);
 
+  useEffect(() => {
+    if (selectedAdmin) {
+      window.localStorage.setItem("mediflow.selectedAdmin", JSON.stringify(selectedAdmin));
+    } else {
+      window.localStorage.removeItem("mediflow.selectedAdmin");
+    }
+  }, [selectedAdmin]);
+
   const setSelectedDoctor = (doctor) => {
     setSelectedDoctorState(doctor);
     setActiveRole("doctor");
@@ -50,6 +59,11 @@ export const AppProvider = ({ children }) => {
     setActiveRole("patient");
   };
 
+  const setSelectedAdmin = (admin) => {
+    setSelectedAdminState(admin);
+    setActiveRole("admin");
+  };
+
   const value = useMemo(
     () => ({
       activeRole,
@@ -58,8 +72,10 @@ export const AppProvider = ({ children }) => {
       setSelectedDoctor,
       selectedPatient,
       setSelectedPatient,
+      selectedAdmin,
+      setSelectedAdmin,
     }),
-    [activeRole, selectedDoctor, selectedPatient]
+    [activeRole, selectedDoctor, selectedPatient, selectedAdmin]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -47,8 +47,9 @@ def init_db():
     """
     # Import all models here to ensure they are registered with Base
     from database.models import (
-        department, doctor, patient, appointment, 
-        queue, consultation, prescription, medical_record
+        department, doctor, patient, appointment,
+        queue, consultation, prescription, medical_record,
+        admin_user, department_chat
     )
     
     Base.metadata.create_all(bind=engine)

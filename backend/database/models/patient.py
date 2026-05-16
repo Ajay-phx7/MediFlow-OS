@@ -44,15 +44,15 @@ class Patient(Base):
         return {
             "id": self.id,
             "name": self.name,
-            "dob": self.date_of_birth.isoformat() if self.date_of_birth else None,
+            "dob": self.date_of_birth.isoformat() if self.date_of_birth is not None else None,
             "age": self.age,
             "blood_group": self.blood_group,
             "allergies": self.allergies,
             "phone": self.phone,
             "email": self.email,
             "address": self.address,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at is not None else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at is not None else None,
         }
 
 # Made with Bob

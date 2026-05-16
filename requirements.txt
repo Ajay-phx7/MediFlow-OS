@@ -10,6 +10,9 @@ google-genai
 ibm-watson
 ibm-cloud-sdk-core
 openai
+pandas
+prophet
+numpy
 
 # Database
 sqlalchemy>=2.0.0

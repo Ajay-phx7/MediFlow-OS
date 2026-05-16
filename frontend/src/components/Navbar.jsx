@@ -4,11 +4,12 @@ import { useContext } from "react";
 import { AppContext } from "../context/AppContext.jsx";
 
 const Navbar = ({ title, subtitle, displayName }) => {
-  const { activeRole, selectedDoctor, selectedPatient } = useContext(AppContext);
+  const { activeRole, selectedDoctor, selectedPatient, selectedAdmin } = useContext(AppContext);
   const resolvedName =
     displayName ||
     (activeRole === "doctor" && selectedDoctor?.name) ||
     (activeRole === "patient" && selectedPatient?.name) ||
+    (activeRole === "admin" && selectedAdmin?.department) ||
     "Demo User";
 
   return (

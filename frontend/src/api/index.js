@@ -44,12 +44,20 @@ export const escalateAlert = (alertId, level) =>
 export const getProtocol = (type) =>
   api.get("/api/admin/emergency/protocol", { params: { type } });
 
+export const getAvailableAdmins = () => api.get("/api/auth/admins");
+export const loginAsAdmin = (adminId) => api.get(`/api/auth/admins/${adminId}`);
+
 export const getAvailableDoctors = () => api.get("/api/auth/doctors");
 export const loginAsDoctor = (doctorId) => api.get(`/api/auth/doctors/${doctorId}`);
 
 export const getAvailablePatients = (search = "") =>
   api.get("/api/auth/patients", { params: search ? { search } : undefined });
 export const loginAsPatient = (patientId) => api.get(`/api/auth/patients/${patientId}`);
+
+export const getAllChat = () => api.get("/api/admin/chat/all");
+export const getDepartmentChat = (department) => api.get(`/api/admin/chat/${department}`);
+export const sendChatMessage = (department, senderUsername, messageText) =>
+  api.post("/api/admin/chat", { department, sender_username: senderUsername, message_text: messageText });
 
 export const getDoctorDashboard = (doctorId) =>
   api.get("/api/doctor/dashboard", { params: doctorId ? { doctor_id: doctorId } : undefined });

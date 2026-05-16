@@ -10,6 +10,8 @@ from .queue import QueueEntry
 from .consultation import Consultation
 from .prescription import Prescription, PrescriptionItem
 from .medical_record import MedicalRecord, Medication, LabResult, Vaccination
+from .admin_user import AdminUser
+from .department_chat import DepartmentChatMessage
 
 __all__ = [
     "Department",
@@ -24,6 +26,8 @@ __all__ = [
     "Medication",
     "LabResult",
     "Vaccination",
+    "AdminUser",
+    "DepartmentChatMessage",
 ]
 
 # Made with Bob

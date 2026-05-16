@@ -9,12 +9,22 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 from database.connection import get_db
-from database.models import Doctor, Patient
+from database.models import Doctor, Patient, AdminUser
 
 router = APIRouter()
 
 
+class AdminLoginResponse(BaseModel):
+    model_config = {"from_attributes": True}
+    
+    id: int
+    username: str
+    department: str
+
+
 class DoctorLoginResponse(BaseModel):
+    model_config = {"from_attributes": True}
+    
     id: int
     name: str
     department: str
@@ -22,6 +32,8 @@ class DoctorLoginResponse(BaseModel):
 
 
 class PatientLoginResponse(BaseModel):
+    model_config = {"from_attributes": True}
+    
     id: int
     name: str
     age: Optional[int]
@@ -37,12 +49,12 @@ def get_all_doctors(db: Session = Depends(get_db)):
     doctors = db.query(Doctor).all()
     
     return [
-        DoctorLoginResponse(
-            id=doctor.id,
-            name=doctor.name,
-            department=doctor.department.name if doctor.department else "Unknown",
-            specialization=doctor.specialization
-        )
+        DoctorLoginResponse.model_validate({
+            "id": doctor.id,
+            "name": doctor.name,
+            "department": doctor.department.name if doctor.department else "Unknown",
+            "specialization": doctor.specialization
+        })
         for doctor in doctors
     ]
 
@@ -91,12 +103,7 @@ def get_all_patients(
     patients = query.all()
     
     return [
-        PatientLoginResponse(
-            id=patient.id,
-            name=patient.name,
-            age=patient.age,
-            blood_group=patient.blood_group
-        )
+        PatientLoginResponse.model_validate(patient)
         for patient in patients
     ]
 
@@ -118,7 +125,7 @@ def login_as_patient(patient_id: int, db: Session = Depends(get_db)):
             "id": patient.id,
             "name": patient.name,
             "age": patient.age,
-            "date_of_birth": patient.date_of_birth.isoformat() if patient.date_of_birth else None,
+            "date_of_birth": patient.date_of_birth.isoformat() if patient.date_of_birth is not None else None,
             "blood_group": patient.blood_group,
             "allergies": patient.allergies,
             "phone": patient.phone,
@@ -129,3 +136,41 @@ def login_as_patient(patient_id: int, db: Session = Depends(get_db)):
 
 
 # Made with Bob
+
+
+@router.get("/admins", response_model=List[AdminLoginResponse])
+def get_all_admins(db: Session = Depends(get_db)):
+    """
+    Get list of all admin accounts for selection-based login
+    No password authentication required
+    """
+    admins = db.query(AdminUser).all()
+    
+    return [
+        AdminLoginResponse.model_validate(admin)
+        for admin in admins
+    ]
+
+
+@router.get("/admins/{admin_id}")
+def login_as_admin(admin_id: int, db: Session = Depends(get_db)):
+    """
+    Login as a specific admin by selecting their ID
+    Returns admin information and access token
+    """
+    admin = db.query(AdminUser).filter(AdminUser.id == admin_id).first()
+    
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin account not found")
+    
+    return {
+        "success": True,
+        "admin": {
+            "id": admin.id,
+            "username": admin.username,
+            "department": admin.department,
+            "created_at": admin.created_at.isoformat()
+        },
+        "message": f"Logged in as {admin.username}"
+    }
+
