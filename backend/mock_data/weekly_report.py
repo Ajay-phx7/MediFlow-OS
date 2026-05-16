@@ -1,334 +1,448 @@
 """
-Weekly report mock data
-Provides hospital performance metrics and analytics
+Weekly Report Mock Data for MediFlow-OS
+Provides comprehensive hospital metrics, clinical data, and safety compliance data
 """
 
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+# All data hardcoded for MVP (no database)
 
-# Current week date range
-current_date = datetime.now()
-week_start = current_date - timedelta(days=current_date.weekday())
-week_end = week_start + timedelta(days=6)
-
-WEEKLY_REPORT = {
-    "report_id": "WR_2026_W20",
-    "week_start": week_start.strftime("%Y-%m-%d"),
-    "week_end": week_end.strftime("%Y-%m-%d"),
-    "generated_at": datetime.now().isoformat(),
+WEEKLY_REPORT_DATA = {
+    # Basic Report Info
+    "report_week": "May 12-18, 2024",
+    "generated_date": "2024-05-19",
+    "hospital_name": "City General Hospital",
     
-    # Overall metrics
-    "summary": {
-        "total_patients": 1247,
-        "total_admissions": 342,
-        "total_discharges": 328,
-        "average_length_of_stay_days": 4.2,
-        "bed_occupancy_rate": 87.5,
-        "emergency_visits": 456,
-        "outpatient_visits": 791
+    # ════════════════════════════════════════
+    # HOSPITAL METRICS (Executive Summary)
+    # ════════════════════════════════════════
+    "hospital_metrics": {
+        "total_patients": 1245,
+        "patient_change_percent": 12,
+        "new_patients_admitted": 450,
+        "patients_discharged": 420,
+        "emergency_walk_ins": 125,
+        "scheduled_appointments": 980,
+        
+        "avg_wait_time_minutes": 24,
+        "wait_time_change_minutes": -3,
+        "emergency_wait_time_minutes": 35,
+        "opd_wait_time_minutes": 22,
+        "lab_wait_time_minutes": 150,
+        "pharmacy_wait_time_minutes": 8,
+        
+        "bed_occupancy_percent": 87,
+        "occupancy_change_percent": 5,
+        "total_beds": 150,
+        "occupied_beds": 130,
+        "available_beds": 20,
+        
+        "no_show_rate_percent": 5.2,
+        "readmission_rate_percent": 3.1,
+        "patient_satisfaction_rating": 4.3
     },
     
-    # Daily breakdown
-    "daily_metrics": [
-        {
-            "date": (week_start + timedelta(days=0)).strftime("%Y-%m-%d"),
-            "day": "Monday",
-            "patients": 198,
-            "admissions": 52,
-            "discharges": 48,
-            "emergency_visits": 72,
-            "bed_occupancy": 89.2
-        },
-        {
-            "date": (week_start + timedelta(days=1)).strftime("%Y-%m-%d"),
-            "day": "Tuesday",
-            "patients": 185,
-            "admissions": 49,
-            "discharges": 51,
-            "emergency_visits": 68,
-            "bed_occupancy": 87.8
-        },
-        {
-            "date": (week_start + timedelta(days=2)).strftime("%Y-%m-%d"),
-            "day": "Wednesday",
-            "patients": 192,
-            "admissions": 54,
-            "discharges": 47,
-            "emergency_visits": 71,
-            "bed_occupancy": 88.5
-        },
-        {
-            "date": (week_start + timedelta(days=3)).strftime("%Y-%m-%d"),
-            "day": "Thursday",
-            "patients": 178,
-            "admissions": 46,
-            "discharges": 49,
-            "emergency_visits": 65,
-            "bed_occupancy": 86.3
-        },
-        {
-            "date": (week_start + timedelta(days=4)).strftime("%Y-%m-%d"),
-            "day": "Friday",
-            "patients": 189,
-            "admissions": 51,
-            "discharges": 53,
-            "emergency_visits": 69,
-            "bed_occupancy": 85.9
-        },
-        {
-            "date": (week_start + timedelta(days=5)).strftime("%Y-%m-%d"),
-            "day": "Saturday",
-            "patients": 152,
-            "admissions": 45,
-            "discharges": 42,
-            "emergency_visits": 58,
-            "bed_occupancy": 84.7
-        },
-        {
-            "date": (week_start + timedelta(days=6)).strftime("%Y-%m-%d"),
-            "day": "Sunday",
-            "patients": 153,
-            "admissions": 45,
-            "discharges": 38,
-            "emergency_visits": 53,
-            "bed_occupancy": 87.1
-        }
-    ],
-    
-    # Department performance
-    "department_metrics": [
+    # ════════════════════════════════════════
+    # DEPARTMENT PERFORMANCE
+    # ════════════════════════════════════════
+    "department_stats": [
         {
             "department": "Emergency",
-            "patients_seen": 456,
-            "average_wait_time_minutes": 28,
-            "patient_satisfaction": 4.2,
-            "staff_utilization": 92.3,
+            "patients": 125,
+            "avg_wait_minutes": 35,
+            "bed_occupancy_percent": 92,
+            "beds_occupied": 15,
+            "total_beds": 15,
+            "rating": 4.1,
+            "status": "High Utilization",
             "trend": "up"
         },
         {
             "department": "Cardiology",
-            "patients_seen": 187,
-            "average_wait_time_minutes": 15,
-            "patient_satisfaction": 4.6,
-            "staff_utilization": 85.7,
+            "patients": 89,
+            "avg_wait_minutes": 18,
+            "bed_occupancy_percent": 76,
+            "beds_occupied": 12,
+            "total_beds": 16,
+            "rating": 4.5,
+            "status": "Optimal",
             "trend": "stable"
         },
         {
             "department": "Orthopedics",
-            "patients_seen": 142,
-            "average_wait_time_minutes": 22,
-            "patient_satisfaction": 4.4,
-            "staff_utilization": 88.2,
-            "trend": "up"
-        },
-        {
-            "department": "Pediatrics",
-            "patients_seen": 203,
-            "average_wait_time_minutes": 18,
-            "patient_satisfaction": 4.7,
-            "staff_utilization": 79.5,
-            "trend": "down"
-        },
-        {
-            "department": "Surgery",
-            "patients_seen": 98,
-            "average_wait_time_minutes": 12,
-            "patient_satisfaction": 4.5,
-            "staff_utilization": 94.1,
+            "patients": 67,
+            "avg_wait_minutes": 15,
+            "bed_occupancy_percent": 65,
+            "beds_occupied": 10,
+            "total_beds": 15,
+            "rating": 4.3,
+            "status": "Good",
             "trend": "stable"
         },
         {
-            "department": "ICU",
-            "patients_seen": 67,
-            "average_wait_time_minutes": 0,
-            "patient_satisfaction": 4.3,
-            "staff_utilization": 96.8,
+            "department": "Pediatrics",
+            "patients": 112,
+            "avg_wait_minutes": 20,
+            "bed_occupancy_percent": 88,
+            "beds_occupied": 14,
+            "total_beds": 16,
+            "rating": 4.6,
+            "status": "High Utilization",
             "trend": "up"
+        },
+        {
+            "department": "ICU",
+            "patients": 34,
+            "avg_wait_minutes": 0,
+            "bed_occupancy_percent": 91,
+            "beds_occupied": 18,
+            "total_beds": 20,
+            "rating": 4.4,
+            "status": "High Utilization",
+            "trend": "up"
+        },
+        {
+            "department": "OPD",
+            "patients": 345,
+            "avg_wait_minutes": 22,
+            "bed_occupancy_percent": 78,
+            "beds_occupied": 39,
+            "total_beds": 50,
+            "rating": 4.0,
+            "status": "Good",
+            "trend": "stable"
         }
     ],
     
-    # Quality metrics
-    "quality_metrics": {
-        "patient_satisfaction_score": 4.4,
-        "readmission_rate": 8.2,
-        "mortality_rate": 1.1,
-        "infection_rate": 0.8,
-        "medication_error_rate": 0.3,
-        "fall_rate": 1.2
+    # ════════════════════════════════════════
+    # CLINICAL DATA
+    # ════════════════════════════════════════
+    "clinical_summary": {
+        "total_surgeries": 18,
+        "emergency_surgeries": 4,
+        "elective_surgeries": 14,
+        "surgery_success_rate_percent": 100,
+        "post_op_infections": 0,
+        "surgical_complications": 0,
+        
+        "top_diagnoses": [
+            {
+                "diagnosis": "Hypertension",
+                "count": 120,
+                "percentage": 9.6
+            },
+            {
+                "diagnosis": "Diabetes",
+                "count": 95,
+                "percentage": 7.6
+            },
+            {
+                "diagnosis": "Respiratory Infection",
+                "count": 87,
+                "percentage": 7.0
+            },
+            {
+                "diagnosis": "Fractures",
+                "count": 56,
+                "percentage": 4.5
+            },
+            {
+                "diagnosis": "Gastroenteritis",
+                "count": 45,
+                "percentage": 3.6
+            },
+            {
+                "diagnosis": "Others",
+                "count": 842,
+                "percentage": 67.7
+            }
+        ],
+        
+        "lab_tests": {
+            "total_tests": 732,
+            "blood_tests": 420,
+            "imaging_tests": 156,
+            "ultrasound": 89,
+            "ecg": 67,
+            "average_turnaround_hours": 2.5
+        },
+        
+        "medication_usage": {
+            "total_prescriptions": 345,
+            "average_drugs_per_patient": 2.3,
+            "antibiotics_prescribed": 89,
+            "controlled_substances": 12
+        }
     },
     
-    # Financial metrics
-    "financial_metrics": {
-        "total_revenue": 2847500,
-        "total_expenses": 2156300,
-        "net_income": 691200,
-        "revenue_per_patient": 2284,
-        "cost_per_patient": 1729,
-        "profit_margin": 24.3
+    # ════════════════════════════════════════
+    # RESOURCE UTILIZATION
+    # ════════════════════════════════════════
+    "resource_utilization": {
+        "beds": {
+            "total": 150,
+            "occupied": 130,
+            "available": 20,
+            "occupancy_percent": 87,
+            "emergency_beds": 15,
+            "emergency_occupied": 15,
+            "icu_beds": 20,
+            "icu_occupied": 18,
+            "general_ward_beds": 75,
+            "general_ward_occupied": 58,
+            "isolation_beds": 40,
+            "isolation_occupied": 39
+        },
+        
+        "equipment": {
+            "ventilators": {
+                "total": 15,
+                "in_use": 12,
+                "available": 3
+            },
+            "monitors": {
+                "total": 50,
+                "in_use": 45,
+                "available": 5
+            },
+            "wheelchairs": {
+                "total": 25,
+                "in_use": 17,
+                "available": 8
+            },
+            "stretchers": {
+                "total": 22,
+                "in_use": 20,
+                "available": 2
+            },
+            "defibrillators": {
+                "total": 6,
+                "in_use": 2,
+                "available": 4
+            }
+        },
+        
+        "staffing": {
+            "doctors": {
+                "total": 20,
+                "on_duty": 18,
+                "on_leave": 2
+            },
+            "nurses": {
+                "total": 50,
+                "on_duty": 45,
+                "on_leave": 5
+            },
+            "support_staff": {
+                "total": 15,
+                "on_duty": 12,
+                "on_leave": 3
+            },
+            "critical_shortage": False
+        }
     },
     
-    # Staffing metrics
-    "staffing_metrics": {
-        "total_staff": 487,
-        "nurses": 245,
-        "doctors": 89,
-        "support_staff": 153,
-        "overtime_hours": 342,
-        "sick_leave_hours": 156,
-        "vacancy_rate": 4.2,
-        "turnover_rate": 8.7
+    # ════════════════════════════════════════
+    # SAFETY & COMPLIANCE
+    # ════════════════════════════════════════
+    "safety_compliance": {
+        "incidents": {
+            "patient_falls": 0,
+            "medication_errors": 1,
+            "needle_stick_injuries": 0,
+            "adverse_events": 2,
+            "complaints_filed": 3,
+            "severity_levels": {
+                "critical": 0,
+                "high": 1,
+                "medium": 2,
+                "low": 0
+            }
+        },
+        
+        "data_security": {
+            "hipaa_compliance_percent": 95,
+            "unauthorized_access_attempts": 0,
+            "data_breach_incidents": 0,
+            "staff_training_completed_percent": 95,
+            "security_audits_passed": True,
+            "last_security_audit_date": "2024-05-15"
+        },
+        
+        "infection_control": {
+            "hospital_acquired_infections": 0,
+            "post_op_infections": 0,
+            "antibiotic_resistance_cases": 0,
+            "hand_hygiene_compliance_percent": 98,
+            "ppe_stock_sufficient": True
+        },
+        
+        "quality_metrics": {
+            "infection_rate_percent": 0.0,
+            "mortality_rate_percent": 0.5,
+            "readmission_rate_percent": 3.1,
+            "average_length_of_stay_days": 4.2,
+            "surgical_site_infection_percent": 0.0
+        },
+        
+        "regulatory": {
+            "norms_compliant": True,
+            "license_valid": True,
+            "accreditation_current": True,
+            "last_inspection": "2024-03-20",
+            "violations": 0,
+            "pending_certifications": 0
+        }
     },
     
-    # Key highlights
-    "highlights": [
+    # ════════════════════════════════════════
+    # DAILY PATIENT VOLUME TREND (7 days)
+    # ════════════════════════════════════════
+    "daily_trends": {
+        "volume_by_day": [
+            {
+                "date": "2024-05-12",
+                "day": "Friday",
+                "total_patients": 165,
+                "avg_wait_minutes": 28,
+                "bed_occupancy_percent": 82
+            },
+            {
+                "date": "2024-05-13",
+                "day": "Saturday",
+                "total_patients": 182,
+                "avg_wait_minutes": 26,
+                "bed_occupancy_percent": 84
+            },
+            {
+                "date": "2024-05-14",
+                "day": "Sunday",
+                "total_patients": 198,
+                "avg_wait_minutes": 24,
+                "bed_occupancy_percent": 88
+            },
+            {
+                "date": "2024-05-15",
+                "day": "Monday",
+                "total_patients": 175,
+                "avg_wait_minutes": 22,
+                "bed_occupancy_percent": 86
+            },
+            {
+                "date": "2024-05-16",
+                "day": "Tuesday",
+                "total_patients": 165,
+                "avg_wait_minutes": 20,
+                "bed_occupancy_percent": 85
+            },
+            {
+                "date": "2024-05-17",
+                "day": "Wednesday",
+                "total_patients": 190,
+                "avg_wait_minutes": 25,
+                "bed_occupancy_percent": 89
+            },
+            {
+                "date": "2024-05-18",
+                "day": "Thursday",
+                "total_patients": 170,
+                "avg_wait_minutes": 23,
+                "bed_occupancy_percent": 87
+            }
+        ]
+    },
+    
+    # ════════════════════════════════════════
+    # ACTION ITEMS & ALERTS
+    # ════════════════════════════════════════
+    "action_items": [
         {
-            "type": "achievement",
-            "title": "Record Patient Satisfaction",
-            "description": "Achieved highest patient satisfaction score of 4.7 in Pediatrics department",
-            "impact": "positive"
+            "id": 1,
+            "title": "Wheelchair inventory low",
+            "priority": "High",
+            "status": "Open",
+            "due_date": "2024-05-25",
+            "action": "Order 20 more units",
+            "department": "Facilities"
         },
         {
-            "type": "concern",
-            "title": "ICU Capacity Strain",
-            "description": "ICU operating at 96.8% capacity, approaching critical threshold",
-            "impact": "negative"
+            "id": 2,
+            "title": "Emergency wait times high",
+            "priority": "High",
+            "status": "In Progress",
+            "due_date": "2024-06-01",
+            "action": "Hire 2 additional nurses for ER",
+            "department": "HR"
         },
         {
-            "type": "improvement",
-            "title": "Reduced Wait Times",
-            "description": "Emergency department wait times decreased by 12% compared to last week",
-            "impact": "positive"
+            "id": 3,
+            "title": "Staff HIPAA training incomplete",
+            "priority": "Medium",
+            "status": "Open",
+            "due_date": "2024-05-20",
+            "action": "Complete training for 5% remaining staff",
+            "department": "Compliance"
         },
         {
-            "type": "alert",
-            "title": "Staffing Shortage",
-            "description": "Nursing vacancy rate increased to 4.2%, recruitment efforts needed",
-            "impact": "negative"
+            "id": 4,
+            "title": "One medication error reported",
+            "priority": "Medium",
+            "status": "Open",
+            "due_date": "2024-05-22",
+            "action": "Conduct root cause analysis and staff retraining",
+            "department": "Quality"
         }
     ],
     
-    # Recommendations
-    "recommendations": [
-        {
-            "priority": "high",
-            "category": "capacity",
-            "recommendation": "Increase ICU capacity or implement patient transfer protocols",
-            "expected_impact": "Reduce ICU strain and improve patient outcomes"
-        },
-        {
-            "priority": "high",
-            "category": "staffing",
-            "recommendation": "Accelerate nursing recruitment and consider temporary staffing",
-            "expected_impact": "Reduce staff burnout and maintain quality of care"
-        },
-        {
-            "priority": "medium",
-            "category": "efficiency",
-            "recommendation": "Implement fast-track system in Emergency department",
-            "expected_impact": "Further reduce wait times and improve patient flow"
-        },
-        {
-            "priority": "medium",
-            "category": "quality",
-            "recommendation": "Review readmission cases to identify preventable factors",
-            "expected_impact": "Reduce readmission rate and improve patient outcomes"
-        },
-        {
-            "priority": "low",
-            "category": "financial",
-            "recommendation": "Optimize supply chain management to reduce costs",
-            "expected_impact": "Improve profit margins without affecting quality"
-        }
-    ],
-    
-    # Comparison with previous week
-    "week_over_week_change": {
-        "total_patients": 3.2,
-        "admissions": 5.1,
-        "discharges": 2.8,
-        "emergency_visits": -2.4,
-        "bed_occupancy": 1.7,
-        "patient_satisfaction": 0.2,
-        "average_wait_time": -12.0
+    # ════════════════════════════════════════
+    # KEY HIGHLIGHTS & ALERTS
+    # ════════════════════════════════════════
+    "highlights": {
+        "positive": [
+            "Zero post-operative infections (excellent!)",
+            "100% surgical success rate",
+            "Patient satisfaction stable at 4.3/5",
+            "HIPAA compliance at 95%"
+        ],
+        "concerns": [
+            "Emergency department wait time: 35 min (target: 30 min)",
+            "Wheelchair availability: 8 units (low stock)",
+            "1 medication error reported (resolved)",
+            "ICU occupancy: 91% (near capacity)"
+        ],
+        "opportunities": [
+            "OPD efficiency can be improved (rating 4.0)",
+            "Implement faster lab testing (currently 2.5 hours)"
+        ]
     }
 }
 
 
-def get_weekly_report() -> Dict:
-    """Get the current weekly report"""
-    return WEEKLY_REPORT
+def get_weekly_report() -> dict:
+    """Return complete weekly report data."""
+    return WEEKLY_REPORT_DATA
 
 
-def get_department_summary(department: str) -> Dict:
-    """Get summary for a specific department"""
-    for dept in WEEKLY_REPORT["department_metrics"]:
-        if dept["department"].lower() == department.lower():
-            return dept
-    return {}
-
-
-def get_quality_metrics() -> Dict:
-    """Get quality metrics"""
-    return WEEKLY_REPORT["quality_metrics"]
-
-
-def get_financial_summary() -> Dict:
-    """Get financial summary"""
-    return WEEKLY_REPORT["financial_metrics"]
-
-
-def get_staffing_summary() -> Dict:
-    """Get staffing summary"""
-    return WEEKLY_REPORT["staffing_metrics"]
-
-
-def get_highlights() -> List[Dict]:
-    """Get key highlights"""
-    return WEEKLY_REPORT["highlights"]
-
-
-def get_recommendations(priority: Optional[str] = None) -> List[Dict]:
-    """Get recommendations, optionally filtered by priority"""
-    recommendations = WEEKLY_REPORT["recommendations"]
-    if priority:
-        return [r for r in recommendations if r["priority"] == priority]
-    return recommendations
-
-
-def get_daily_metrics(date: Optional[str] = None) -> Dict:
-    """Get metrics for a specific date"""
-    if date:
-        for day in WEEKLY_REPORT["daily_metrics"]:
-            if day["date"] == date:
-                return day
-    return {}
-
-
-def get_report_metrics_only() -> Dict:
-    """Get only the summary metrics from the report"""
-    return WEEKLY_REPORT["summary"]
-
-
-def get_clinical_data_only() -> Dict:
-    """Get only clinical quality metrics"""
+def get_report_metrics_only() -> dict:
+    """Return only hospital metrics (lightweight)."""
     return {
-        "quality_metrics": WEEKLY_REPORT["quality_metrics"],
-        "department_metrics": WEEKLY_REPORT["department_metrics"]
+        "report_week": WEEKLY_REPORT_DATA["report_week"],
+        "hospital_metrics": WEEKLY_REPORT_DATA["hospital_metrics"],
+        "department_stats": WEEKLY_REPORT_DATA["department_stats"]
     }
 
 
-def get_safety_compliance_only() -> Dict:
-    """Get only safety and compliance metrics"""
+def get_clinical_data_only() -> dict:
+    """Return only clinical data."""
     return {
-        "infection_rate": WEEKLY_REPORT["quality_metrics"]["infection_rate"],
-        "medication_error_rate": WEEKLY_REPORT["quality_metrics"]["medication_error_rate"],
-        "fall_rate": WEEKLY_REPORT["quality_metrics"]["fall_rate"],
-        "mortality_rate": WEEKLY_REPORT["quality_metrics"]["mortality_rate"]
+        "report_week": WEEKLY_REPORT_DATA["report_week"],
+        "clinical_summary": WEEKLY_REPORT_DATA["clinical_summary"]
     }
 
 
-def get_trend_data() -> Dict:
-    """Get week-over-week trend data"""
-    return WEEKLY_REPORT["week_over_week_change"]
+def get_safety_compliance_only() -> dict:
+    """Return only safety & compliance data."""
+    return {
+        "report_week": WEEKLY_REPORT_DATA["report_week"],
+        "safety_compliance": WEEKLY_REPORT_DATA["safety_compliance"]
+    }
 
 # Made with Bob

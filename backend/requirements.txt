@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 python-multipart
-prophet
-pandas
-numpy
+numpy>=1.24
+prophet>=1.1.5
+pandas>=2.0
 pytest

@@ -1,142 +1,181 @@
-"""
-Training data generation and management for surge prediction model
-Provides historical patient data for model training
-"""
-
+import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 from typing import List, Dict
-import random
 
 
-def generate_historical_data(days: int = 365) -> List[Dict]:
+def generate_training_data() -> pd.DataFrame:
     """
-    Generate synthetic historical patient data for training
+    Generate 6 months of synthetic patient volume data.
+    Returns DataFrame with 'ds' and 'y' columns ready for Prophet.
     
-    Args:
-        days: Number of days of historical data to generate
-        
-    Returns:
-        List of dicts with 'date' and 'patient_count' keys
+    Patterns:
+    - Weekday avg: 130 patients/day (M-F)
+    - Weekend avg: 90 patients/day (Sat-Sun)
+    - Weekly seasonality: Mon-Wed high, Thu-Fri medium, Sat-Sun low
+    - Trend: Slight upward trend (+0.2 patients/day)
+    - Random noise: ±10 patients/day variance
+    - Occasional spikes: 2-3 random days with 50% more patients
     """
+    # Generate 180 days of historical data (6 months)
+    days = 180
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days)
+    
+    # Create date range
+    dates = pd.date_range(start=start_date, end=end_date, freq='D')
+    
+    # Initialize data list
     data = []
-    base_date = datetime.now() - timedelta(days=days)
     
-    for i in range(days):
-        current_date = base_date + timedelta(days=i)
+    # Generate spike days (2-3 random days with high volume)
+    spike_indices = np.random.choice(range(days), size=3, replace=False)
+    
+    for i, date in enumerate(dates):
+        # Base volume depends on day of week
+        day_of_week = date.dayofweek  # 0=Monday, 6=Sunday
         
-        # Base patient count
-        base_count = 100
+        if day_of_week < 5:  # Weekday (Mon-Fri)
+            base_volume = 130
+        else:  # Weekend (Sat-Sun)
+            base_volume = 90
         
-        # Weekly pattern (higher on weekdays, lower on weekends)
-        day_of_week = current_date.weekday()
-        if day_of_week >= 5:  # Weekend
-            weekly_factor = 0.7
-        else:  # Weekday
-            weekly_factor = 1.0 + (day_of_week * 0.05)
+        # Add slight upward trend (growth over 6 months)
+        trend = 0.2 * i
         
-        # Monthly pattern (higher at month start/end)
-        day_of_month = current_date.day
-        if day_of_month <= 5 or day_of_month >= 25:
-            monthly_factor = 1.2
-        else:
-            monthly_factor = 1.0
+        # Add random noise
+        noise = np.random.normal(0, 10)
         
-        # Seasonal pattern (higher in winter months)
-        month = current_date.month
-        if month in [12, 1, 2]:  # Winter
-            seasonal_factor = 1.3
-        elif month in [6, 7, 8]:  # Summer
-            seasonal_factor = 0.9
-        else:  # Spring/Fall
-            seasonal_factor = 1.0
+        # Calculate volume
+        volume = base_volume + trend + noise
         
-        # Random variation
-        random_factor = random.uniform(0.85, 1.15)
+        # Add spike if this is a spike day
+        if i in spike_indices:
+            volume *= 1.5  # 50% increase for spike days
         
-        # Calculate final count
-        patient_count = int(
-            base_count * weekly_factor * monthly_factor * 
-            seasonal_factor * random_factor
-        )
-        
-        # Add occasional surge events
-        if random.random() < 0.05:  # 5% chance of surge
-            patient_count = int(patient_count * random.uniform(1.4, 1.8))
+        # Ensure volume is positive and reasonable
+        volume = max(50, min(300, volume))
         
         data.append({
-            'date': current_date.strftime('%Y-%m-%d'),
-            'patient_count': patient_count
+            'ds': date,
+            'y': int(round(volume))
         })
     
-    return data
-
-
-def get_recent_data(days: int = 30) -> List[Dict]:
-    """
-    Get recent historical data for quick training
+    df = pd.DataFrame(data)
     
-    Args:
-        days: Number of recent days to retrieve
+    print(f"Generated {len(df)} days of synthetic training data")
+    print(f"Date range: {df['ds'].min().strftime('%Y-%m-%d')} to {df['ds'].max().strftime('%Y-%m-%d')}")
+    print(f"Volume range: {df['y'].min()} to {df['y'].max()} patients/day")
+    print(f"Average volume: {df['y'].mean():.1f} patients/day")
+    
+    return df
+
+
+def generate_india_holidays() -> List[Dict[str, str]]:
+    """
+    Generate India holidays for Prophet model.
+    Returns list of holiday dictionaries with 'holiday' and 'ds' keys.
+    
+    Major India holidays that affect hospital patient volume:
+    - Diwali (October/November) - 5-day festival
+    - Holi (March) - 2-day festival
+    - Dussehra (September/October)
+    - Eid (varies by lunar calendar)
+    - Republic Day (Jan 26)
+    - Independence Day (Aug 15)
+    - Gandhi Jayanti (Oct 2)
+    """
+    holidays = []
+    
+    # Get current year and previous year for 6-month historical data
+    current_year = datetime.now().year
+    years = [current_year - 1, current_year]
+    
+    for year in years:
+        # Fixed date holidays
+        holidays.extend([
+            {'holiday': 'republic_day', 'ds': f'{year}-01-26'},
+            {'holiday': 'independence_day', 'ds': f'{year}-08-15'},
+            {'holiday': 'gandhi_jayanti', 'ds': f'{year}-10-02'},
+        ])
         
-    Returns:
-        List of recent patient data
-    """
-    return generate_historical_data(days)
-
-
-def get_training_data() -> List[Dict]:
-    """
-    Get full training dataset (1 year of data)
+        # Approximate dates for lunar calendar holidays (simplified)
+        # In production, use a proper lunar calendar library
+        if year == 2024:
+            holidays.extend([
+                {'holiday': 'holi', 'ds': '2024-03-25'},
+                {'holiday': 'dussehra', 'ds': '2024-10-12'},
+                {'holiday': 'diwali', 'ds': '2024-11-01'},
+                {'holiday': 'diwali', 'ds': '2024-11-02'},
+                {'holiday': 'diwali', 'ds': '2024-11-03'},
+            ])
+        elif year == 2025:
+            holidays.extend([
+                {'holiday': 'holi', 'ds': '2025-03-14'},
+                {'holiday': 'dussehra', 'ds': '2025-10-02'},
+                {'holiday': 'diwali', 'ds': '2025-10-20'},
+                {'holiday': 'diwali', 'ds': '2025-10-21'},
+                {'holiday': 'diwali', 'ds': '2025-10-22'},
+            ])
+        elif year == 2026:
+            holidays.extend([
+                {'holiday': 'holi', 'ds': '2026-03-03'},
+                {'holiday': 'dussehra', 'ds': '2026-09-21'},
+                {'holiday': 'diwali', 'ds': '2026-11-08'},
+                {'holiday': 'diwali', 'ds': '2026-11-09'},
+                {'holiday': 'diwali', 'ds': '2026-11-10'},
+            ])
     
-    Returns:
-        Full historical dataset for training
-    """
-    return generate_historical_data(365)
+    return holidays
 
 
-def add_custom_events(data: List[Dict], events: List[Dict]) -> List[Dict]:
+def generate_flu_spike_events() -> pd.DataFrame:
     """
-    Add custom surge events to historical data
+    Generate custom flu spike events for Prophet model.
+    Returns DataFrame with 'ds' and 'flu_spike' columns.
     
-    Args:
-        data: Existing historical data
-        events: List of events with 'date' and 'surge_multiplier' keys
+    Simulates flu season spikes that typically occur:
+    - Winter months (December-February): Higher flu activity
+    - Monsoon season (July-August): Increased respiratory infections
+    
+    flu_spike values:
+    - 0: Normal day
+    - 1: Flu spike day (adds ~20-30 extra patients)
+    """
+    # Generate date range for 6 months historical data
+    days = 180
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days)
+    dates = pd.date_range(start=start_date, end=end_date, freq='D')
+    
+    flu_events = []
+    
+    for date in dates:
+        month = date.month
+        flu_spike = 0
         
-    Returns:
-        Modified data with custom events
-    """
-    event_dict = {event['date']: event['surge_multiplier'] for event in events}
+        # Winter flu season (December, January, February)
+        if month in [12, 1, 2]:
+            # 30% chance of flu spike during winter
+            if np.random.random() < 0.3:
+                flu_spike = 1
+        
+        # Monsoon season (July, August)
+        elif month in [7, 8]:
+            # 20% chance of flu spike during monsoon
+            if np.random.random() < 0.2:
+                flu_spike = 1
+        
+        flu_events.append({
+            'ds': date,
+            'flu_spike': flu_spike
+        })
     
-    modified_data = []
-    for record in data:
-        if record['date'] in event_dict:
-            multiplier = event_dict[record['date']]
-            modified_record = record.copy()
-            modified_record['patient_count'] = int(record['patient_count'] * multiplier)
-            modified_data.append(modified_record)
-        else:
-            modified_data.append(record)
+    df = pd.DataFrame(flu_events)
+    spike_count = df['flu_spike'].sum()
+    print(f"Generated {spike_count} flu spike events in {len(df)} days")
     
-    return modified_data
+    return df
 
-
-# Sample custom events (holidays, epidemics, etc.)
-CUSTOM_EVENTS = [
-    {'date': '2025-12-25', 'surge_multiplier': 0.5},  # Christmas - lower
-    {'date': '2026-01-01', 'surge_multiplier': 0.6},  # New Year - lower
-    {'date': '2026-01-15', 'surge_multiplier': 1.8},  # Flu season peak
-    {'date': '2026-02-14', 'surge_multiplier': 1.3},  # Valentine's Day surge
-]
-
-
-def get_training_data_with_events() -> List[Dict]:
-    """
-    Get training data with custom events included
-    
-    Returns:
-        Historical data with custom surge events
-    """
-    base_data = generate_historical_data(365)
-    return add_custom_events(base_data, CUSTOM_EVENTS)
 
 # Made with Bob
