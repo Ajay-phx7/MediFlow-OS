@@ -1,28 +1,40 @@
-import { Shield, Stethoscope, UserRound } from "lucide-react";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { AppContext } from "../context/AppContext.jsx";
+import ParticleCanvas from "../components/ParticleCanvas.jsx";
 
-const ROLE_CARDS = [
+const WORKSPACE_CARDS = [
   {
-    title: "Admin / Reception",
-    description: "Oversee queues, departments, and surge forecasts.",
-    icon: Shield,
-    to: "/admin",
+    title: "Admin Workspace",
+    subtitle: "System Monitoring & Resource Allocation",
+    icon: "shield_with_heart",
+    features: [
+      "Real-time Node Status",
+      "Institutional Governance"
+    ],
+    to: "/admin/login",
     role: "admin",
   },
   {
-    title: "Doctor",
-    description: "Select a doctor profile and open the connected workspace.",
-    icon: Stethoscope,
+    title: "Doctor Workspace",
+    subtitle: "Diagnostic Intelligence & Clinical Flow",
+    icon: "stethoscope",
+    iconFilled: true,
+    features: [
+      "AI-Powered Diagnostics",
+      "Patient Record Access"
+    ],
     to: "/doctor/login",
     role: "doctor",
   },
   {
-    title: "Patient",
-    description: "Search your profile and view only your own records.",
-    icon: UserRound,
+    title: "Patient Workspace",
+    subtitle: "Personal Health Portal & Telemetry",
+    icon: "person_pin_circle",
+    features: [
+      "Neural Link Health History",
+      "AI Health Advisor"
+    ],
     to: "/patient/login",
     role: "patient",
   },
@@ -38,41 +50,144 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 relative overflow-hidden">
-      <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-blue-100 blur-3xl" />
-      <div className="absolute bottom-10 left-10 h-56 w-56 rounded-full bg-amber-100 blur-3xl" />
+    <div className="min-h-screen flex flex-col overflow-x-hidden font-body-md text-body-md">
+      <ParticleCanvas />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Hospital Management Platform</p>
-          <h1 className="text-4xl sm:text-5xl font-semibold text-slate-900 mt-4">MediFlow-OS</h1>
-          <p className="text-base sm:text-lg text-slate-600 mt-4">
-            Choose your role to explore the hospital operations dashboard.
+      {/* TopAppBar */}
+      <header
+        id="main-header"
+        className="sticky top-0 z-50 flex justify-between items-center w-full px-margin-desktop py-4 bg-surface-bright border-b border-white/5"
+      >
+        <div className="font-display-lg text-[24px] md:text-display-lg font-bold text-primary tracking-tighter">
+          MediFlow OS
+        </div>
+        <nav className="hidden md:flex items-center gap-gutter">
+          <a
+            className="text-on-surface-variant font-medium hover:text-surface-tint hover:bg-surface-variant/30 transition-all duration-300 px-3 py-1 rounded-full"
+            href="#"
+          >
+            Workspaces
+          </a>
+          <a
+            className="text-on-surface-variant font-medium hover:text-surface-tint hover:bg-surface-variant/30 transition-all duration-300 px-3 py-1 rounded-full"
+            href="#"
+          >
+            Intelligence
+          </a>
+          <a
+            className="text-on-surface-variant font-medium hover:text-surface-tint hover:bg-surface-variant/30 transition-all duration-300 px-3 py-1 rounded-full"
+            href="#"
+          >
+            Security
+          </a>
+          <a
+            className="text-on-surface-variant font-medium hover:text-surface-tint hover:bg-surface-variant/30 transition-all duration-300 px-3 py-1 rounded-full"
+            href="#"
+          >
+            Network
+          </a>
+        </nav>
+        <div className="flex items-center gap-4">
+          <span className="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-surface-tint transition-all active:scale-95">
+            settings
+          </span>
+          <span className="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-surface-tint transition-all active:scale-95">
+            account_circle
+          </span>
+          <button className="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform duration-150 active:scale-95">
+            Launch OS
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-grow flex flex-col items-center justify-end px-margin-desktop relative pb-12 h-[calc(100vh-80px)]">
+        {/* Hero Section */}
+        <section id="hero-section" className="text-center mb-8 max-w-4xl mt-auto">
+          <h1 className="font-display-lg text-display-lg text-primary mb-2">
+            MediFlow OS
+          </h1>
+          <h2 className="font-headline-lg text-headline-lg text-secondary mb-4">
+            Unified Intelligent Healthcare Infrastructure
+          </h2>
+          <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto opacity-80">
+            Connecting patients, doctors, and administrators through one seamless AI-powered
+            ecosystem. Precision data management meets cinematic clinical workflow.
+          </p>
+        </section>
+
+        {/* Workspace Selection UI (Curved Glassmorphic Cards) */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter items-stretch w-full max-w-5xl">
+          {WORKSPACE_CARDS.map((card) => (
+            <div
+              key={card.title}
+              onClick={() => handleSelect(card.role, card.to)}
+              className="glass-panel p-6 rounded-xl flex flex-col items-center text-center glow-hover transition-all duration-500 cursor-pointer group h-full"
+            >
+              <div className="w-14 h-14 rounded-full bg-surface-variant flex items-center justify-center mb-4 group-hover:bg-primary-container/20 transition-colors">
+                <span
+                  className="material-symbols-outlined text-3xl text-primary-container"
+                  style={card.iconFilled ? { fontVariationSettings: '"FILL" 1' } : {}}
+                >
+                  {card.icon}
+                </span>
+              </div>
+              <h3 className="font-headline-lg text-xl text-primary mb-2">{card.title}</h3>
+              <p className="font-data-label text-data-label text-on-surface-variant mb-4 uppercase">
+                {card.subtitle}
+              </p>
+              <div className="space-y-2 w-full text-left mt-auto">
+                {card.features.map((feature, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-on-secondary-container">
+                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                    <span className="text-xs font-data-label">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="flex flex-col md:flex-row justify-between items-center px-margin-desktop py-8 gap-gutter bg-surface-container-lowest border-t border-surface-variant/20">
+        <div className="flex flex-col gap-1">
+          <div className="font-headline-lg text-xl font-semibold text-primary">MediFlow OS</div>
+          <p className="text-on-surface-variant font-data-label text-[10px] tracking-widest">
+            © 2024 MEDIFLOW OS. SYSTEM STATUS: AI HEARTBEAT ACTIVE
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-          {ROLE_CARDS.map((card) => {
-            const Icon = card.icon;
-            return (
-              <button
-                key={card.title}
-                className="text-left bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition"
-                onClick={() => handleSelect(card.role, card.to)}
-              >
-                <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center">
-                  <Icon className="h-6 w-6" />
-                </div>
-                <h2 className="text-xl font-semibold text-slate-900 mt-4">{card.title}</h2>
-                <p className="text-sm text-slate-500 mt-2">{card.description}</p>
-                <div className="mt-6 text-sm font-semibold text-blue-600">Enter workspace</div>
-              </button>
-            );
-          })}
+        <div className="flex gap-gutter">
+          <a
+            className="text-on-surface-variant font-body-md text-sm hover:text-surface-tint transition-colors"
+            href="#"
+          >
+            Architecture
+          </a>
+          <a
+            className="text-on-surface-variant font-body-md text-sm hover:text-surface-tint transition-colors"
+            href="#"
+          >
+            Privacy Protocol
+          </a>
+          <a
+            className="text-on-surface-variant font-body-md text-sm hover:text-surface-tint transition-colors"
+            href="#"
+          >
+            Neural Link Status
+          </a>
         </div>
-      </div>
+        <div className="flex items-center gap-4">
+          <div className="w-3 h-3 rounded-full bg-primary-container animate-pulse shadow-glow-cyan"></div>
+          <span className="font-data-label text-data-label text-primary-container">
+            SYSTEMS_NOMINAL
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };
 
 export default Home;
+
+// Made with Bob

@@ -37,59 +37,97 @@ const DoctorLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white flex items-center justify-center px-6 py-12">
-      <div className="max-w-4xl w-full grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-slate-950/30">
-          <p className="text-xs uppercase tracking-[0.4em] text-cyan-300/80">Doctor access</p>
-          <h1 className="text-4xl font-semibold mt-4">Choose a doctor profile</h1>
-          <p className="text-slate-300 mt-4 max-w-xl">
-            No password is required. Select a doctor to open the matching dashboard with only that doctor’s connected patients, appointments, and prescriptions.
-          </p>
+    <div className="min-h-screen flex flex-col overflow-x-hidden font-body-md text-body-md bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex justify-between items-center w-full px-margin-desktop py-4 bg-surface-bright border-b border-white/5">
+        <div className="font-display-lg text-[24px] font-bold text-primary tracking-tighter">
+          MediFlow OS
+        </div>
+        <button
+          onClick={() => navigate("/")}
+          className="text-on-surface-variant hover:text-surface-tint transition-colors text-sm"
+        >
+          ← Back to Home
+        </button>
+      </header>
 
-          <div className="grid gap-3 mt-8">
-            {doctors.map((doctor) => (
-              <button
-                key={doctor.id}
-                className={`text-left rounded-2xl border p-4 transition ${selectedId === doctor.id ? "border-cyan-400 bg-cyan-400/10" : "border-white/10 bg-white/5 hover:bg-white/10"}`}
-                onClick={() => setSelectedId(doctor.id)}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-lg font-semibold">{doctor.name}</p>
-                    <p className="text-sm text-slate-300 mt-1">
-                      {doctor.department} {doctor.specialization ? `• ${doctor.specialization}` : ""}
-                    </p>
+      {/* Main Content */}
+      <main className="flex-grow flex items-center justify-center px-6 py-12">
+        <div className="max-w-5xl w-full grid gap-gutter lg:grid-cols-[1.1fr_0.9fr]">
+          {/* Doctor Selection Panel */}
+          <div className="glass-panel p-8 rounded-xl">
+            <p className="font-data-label text-data-label text-primary-container uppercase tracking-wider">
+              Doctor Access
+            </p>
+            <h1 className="font-headline-lg text-headline-lg text-primary mt-4">
+              Choose a doctor profile
+            </h1>
+            <p className="text-on-surface-variant mt-4 leading-relaxed">
+              No password is required. Select a doctor to open the matching dashboard with only that doctor's connected patients, appointments, and prescriptions.
+            </p>
+
+            <div className="grid gap-3 mt-8">
+              {doctors.map((doctor) => (
+                <button
+                  key={doctor.id}
+                  className={`text-left rounded-xl border p-4 transition-all duration-300 ${
+                    selectedId === doctor.id
+                      ? "border-primary-container bg-primary-container/10 shadow-glow-cyan"
+                      : "border-outline-variant bg-surface-container-low hover:border-primary-container/50"
+                  }`}
+                  onClick={() => setSelectedId(doctor.id)}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-headline-lg text-lg font-semibold text-primary">
+                        {doctor.name}
+                      </p>
+                      <p className="text-sm text-on-surface-variant mt-1">
+                        {doctor.department} {doctor.specialization ? `• ${doctor.specialization}` : ""}
+                      </p>
+                    </div>
+                    <span className="font-data-label text-xs uppercase tracking-wider text-primary-container">
+                      #{doctor.id}
+                    </span>
                   </div>
-                  <span className="text-xs uppercase tracking-[0.25em] text-cyan-300">#{doctor.id}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-8 shadow-2xl shadow-slate-950/30">
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Preview</p>
-          <div className="mt-4 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-white/10 p-6">
-            <p className="text-sm text-slate-300">Selected doctor</p>
-            <h2 className="text-2xl font-semibold mt-2">{selectedDoctor?.name ?? "Select a doctor"}</h2>
-            <p className="text-slate-300 mt-1">{selectedDoctor?.department ?? "Department will appear here"}</p>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <button
-            className="mt-6 w-full rounded-2xl bg-cyan-400 text-slate-950 py-3.5 font-semibold disabled:opacity-50"
-            disabled={!selectedDoctor || isLoading}
-            onClick={handleContinue}
-          >
-            {isLoading ? "Opening dashboard..." : "Open doctor dashboard"}
-          </button>
+          {/* Preview Panel */}
+          <div className="glass-panel p-8 rounded-xl">
+            <p className="font-data-label text-data-label text-on-surface-variant uppercase tracking-wider">
+              Preview
+            </p>
+            <div className="mt-6 rounded-xl bg-gradient-to-br from-primary-container/20 to-secondary-container/10 border border-primary-container/30 p-6">
+              <p className="text-sm text-on-surface-variant">Selected doctor</p>
+              <h2 className="font-headline-lg text-2xl font-semibold text-primary mt-2">
+                {selectedDoctor?.name ?? "Select a doctor"}
+              </h2>
+              <p className="text-on-surface-variant mt-1">
+                {selectedDoctor?.department ?? "Department will appear here"}
+              </p>
+            </div>
 
-          <p className="text-xs text-slate-400 mt-4 leading-6">
-            This selection is stored locally so the dashboard and patient workspace stay aligned to the same connected mock record set.
-          </p>
+            <button
+              className="mt-6 w-full rounded-xl bg-primary-container text-on-primary-container py-3.5 font-bold disabled:opacity-50 hover:scale-105 transition-transform duration-150 active:scale-95"
+              disabled={!selectedDoctor || isLoading}
+              onClick={handleContinue}
+            >
+              {isLoading ? "Opening dashboard..." : "Open doctor dashboard"}
+            </button>
+
+            <p className="text-xs text-on-surface-variant mt-4 leading-relaxed">
+              This selection is stored locally so the dashboard and patient workspace stay aligned to the same connected mock record set.
+            </p>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
 export default DoctorLogin;
+
+// Made with Bob

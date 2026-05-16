@@ -43,88 +43,128 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white flex items-center justify-center px-6 py-12">
-      <div className="max-w-4xl w-full grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-slate-950/30">
-          <p className="text-xs uppercase tracking-[0.4em] text-cyan-300/80">Admin access</p>
-          <h1 className="text-4xl font-semibold mt-4">Admin / Reception Dashboard</h1>
-          <p className="text-slate-300 mt-4 max-w-xl">
-            Access the administrative dashboard to manage hospital operations, monitor queues, track surge predictions, and coordinate emergency responses.
-          </p>
+    <div className="min-h-screen flex flex-col overflow-x-hidden font-body-md text-body-md bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex justify-between items-center w-full px-margin-desktop py-4 bg-surface-bright border-b border-white/5">
+        <div className="font-display-lg text-[24px] font-bold text-primary tracking-tighter">
+          MediFlow OS
+        </div>
+        <button
+          onClick={() => navigate("/")}
+          className="text-on-surface-variant hover:text-surface-tint transition-colors text-sm"
+        >
+          ← Back to Home
+        </button>
+      </header>
 
-          <div className="mt-8 space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <h3 className="text-lg font-semibold mb-3">Dashboard Features</h3>
-              <ul className="space-y-2 text-sm text-slate-300">
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-                  Operational overview and statistics
+      {/* Main Content */}
+      <main className="flex-grow flex items-center justify-center px-6 py-12">
+        <div className="max-w-5xl w-full grid gap-gutter lg:grid-cols-[1.1fr_0.9fr]">
+          {/* Info Panel */}
+          <div className="glass-panel p-8 rounded-xl">
+            <p className="font-data-label text-data-label text-primary-container uppercase tracking-wider">
+              Admin Access
+            </p>
+            <h1 className="font-headline-lg text-headline-lg text-primary mt-4">
+              Admin / Reception Dashboard
+            </h1>
+            <p className="text-on-surface-variant mt-4 leading-relaxed">
+              Access the administrative dashboard to manage hospital operations, monitor queues, track surge predictions, and coordinate emergency responses.
+            </p>
+
+            <div className="mt-8 glass-panel p-6 rounded-xl border-primary-container/20">
+              <h3 className="font-headline-lg text-lg font-semibold text-primary mb-4">
+                Dashboard Features
+              </h3>
+              <ul className="space-y-3 text-sm text-on-surface-variant">
+                <li className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary-container text-base">
+                    check_circle
+                  </span>
+                  <span>Operational overview and statistics</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-                  Queue management system
+                <li className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary-container text-base">
+                    check_circle
+                  </span>
+                  <span>Queue management system</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-                  Surge prediction and forecasting
+                <li className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary-container text-base">
+                    check_circle
+                  </span>
+                  <span>Surge prediction and forecasting</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-                  Live resource monitoring
+                <li className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary-container text-base">
+                    check_circle
+                  </span>
+                  <span>Live resource monitoring</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-                  Department communication
+                <li className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary-container text-base">
+                    check_circle
+                  </span>
+                  <span>Department communication</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-                  Emergency control center
+                <li className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary-container text-base">
+                    check_circle
+                  </span>
+                  <span>Emergency control center</span>
                 </li>
               </ul>
             </div>
           </div>
-        </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-8 shadow-2xl shadow-slate-950/30">
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Select Department</p>
-          
-          <div className="mt-4 space-y-4">
-            {admins.map((admin) => (
-              <button
-                key={admin.id}
-                className={`w-full text-left rounded-2xl border p-4 transition ${
-                  selectedAdminId === admin.id
-                    ? "border-cyan-400 bg-gradient-to-br from-cyan-500/20 to-blue-500/10"
-                    : "border-white/10 bg-white/5 hover:border-white/20"
-                }`}
-                onClick={() => setSelectedAdminId(admin.id)}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">{admin.department}</h3>
-                    <p className="text-sm text-slate-400 mt-1">{admin.username}</p>
+          {/* Selection Panel */}
+          <div className="glass-panel p-8 rounded-xl">
+            <p className="font-data-label text-data-label text-on-surface-variant uppercase tracking-wider">
+              Select Department
+            </p>
+            
+            <div className="mt-6 space-y-3">
+              {admins.map((admin) => (
+                <button
+                  key={admin.id}
+                  className={`w-full text-left rounded-xl border p-4 transition-all duration-300 ${
+                    selectedAdminId === admin.id
+                      ? "border-primary-container bg-primary-container/10 shadow-glow-cyan"
+                      : "border-outline-variant bg-surface-container-low hover:border-primary-container/50"
+                  }`}
+                  onClick={() => setSelectedAdminId(admin.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-headline-lg text-lg font-semibold text-primary">
+                        {admin.department}
+                      </h3>
+                      <p className="font-data-label text-sm text-on-surface-variant mt-1">
+                        {admin.username}
+                      </p>
+                    </div>
+                    {selectedAdminId === admin.id && (
+                      <div className="w-3 h-3 rounded-full bg-primary-container animate-pulse shadow-glow-cyan"></div>
+                    )}
                   </div>
-                  {selectedAdminId === admin.id && (
-                    <div className="h-3 w-3 rounded-full bg-cyan-400"></div>
-                  )}
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
+
+            <button
+              className="mt-6 w-full rounded-xl bg-primary-container text-on-primary-container py-3.5 font-bold disabled:opacity-50 hover:scale-105 transition-transform duration-150 active:scale-95"
+              disabled={isLoading || !selectedAdminId}
+              onClick={handleContinue}
+            >
+              {isLoading ? "Opening dashboard..." : "Open admin dashboard"}
+            </button>
+
+            <p className="text-xs text-on-surface-variant mt-4 leading-relaxed">
+              Select your department to access the administrative dashboard. All departments have full system access with personalized chat channels.
+            </p>
           </div>
-
-          <button
-            className="mt-6 w-full rounded-2xl bg-cyan-400 text-slate-950 py-3.5 font-semibold disabled:opacity-50 hover:bg-cyan-300 transition"
-            disabled={isLoading || !selectedAdminId}
-            onClick={handleContinue}
-          >
-            {isLoading ? "Opening dashboard..." : "Open admin dashboard"}
-          </button>
-
-          <p className="text-xs text-slate-400 mt-4 leading-6">
-            Select your department to access the administrative dashboard. All departments have full system access with personalized chat channels.
-          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
