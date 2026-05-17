@@ -3,6 +3,7 @@ Authentication router for MediFlow OS
 Provides simple selection-based login for doctors and patients (no password required)
 """
 
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -10,6 +11,7 @@ from typing import List, Optional
 
 from database.connection import get_db
 from database.models import Doctor, Patient, AdminUser
+from services.patient_service import PatientService
 
 router = APIRouter()
 
@@ -38,6 +40,17 @@ class PatientLoginResponse(BaseModel):
     name: str
     age: Optional[int]
     blood_group: Optional[str]
+
+
+class PatientSignupRequest(BaseModel):
+    name: str
+    date_of_birth: date
+    age: int
+    blood_group: Optional[str] = None
+    allergies: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
 
 
 @router.get("/doctors", response_model=List[DoctorLoginResponse])
@@ -133,6 +146,12 @@ def login_as_patient(patient_id: int, db: Session = Depends(get_db)):
         },
         "message": f"Logged in as {patient.name}"
     }
+
+
+@router.post("/patients/signup")
+def signup_patient(payload: PatientSignupRequest, db: Session = Depends(get_db)):
+    """Public patient signup endpoint"""
+    return PatientService.signup_patient(db, payload.model_dump())
 
 
 # Made with Bob

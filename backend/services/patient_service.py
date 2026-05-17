@@ -11,6 +11,47 @@ from database.models import (
 
 class PatientService:
     @staticmethod
+    def _serialize_patient(patient: Patient):
+        return {
+            "id": patient.id,
+            "name": patient.name,
+            "date_of_birth": patient.date_of_birth.isoformat() if patient.date_of_birth else None,
+            "age": patient.age,
+            "blood_group": patient.blood_group,
+            "allergies": patient.allergies,
+            "phone": patient.phone,
+            "email": patient.email,
+            "address": patient.address,
+        }
+
+    @staticmethod
+    def signup_patient(db: Session, payload: Dict) -> Dict:
+        """Create a new patient profile for public signup"""
+        if payload.get("email") and patient_crud.get_by_email(db, payload["email"]):
+            return {"error": "A patient with this email already exists"}
+
+        if payload.get("phone") and patient_crud.get_by_phone(db, payload["phone"]):
+            return {"error": "A patient with this phone already exists"}
+
+        patient = patient_crud.create(
+            db,
+            name=payload["name"],
+            date_of_birth=payload.get("date_of_birth"),
+            age=payload.get("age"),
+            blood_group=payload.get("blood_group"),
+            allergies=payload.get("allergies"),
+            phone=payload.get("phone"),
+            email=payload.get("email"),
+            address=payload.get("address"),
+        )
+
+        return {
+            "success": True,
+            "message": f"Welcome, {patient.name}! Your profile has been created.",
+            "patient": PatientService._serialize_patient(patient),
+        }
+
+    @staticmethod
     def get_patient_dashboard(db: Session, patient_id: int = None):
         """Get comprehensive patient dashboard data"""
         # If no patient_id provided, get first patient (for demo)
@@ -93,10 +134,12 @@ class PatientService:
             "upcoming_appointments": [
                 {
                     "id": appt.id,
+                    "doctor_id": appt.doctor_id,
                     "doctor": appt.doctor.name if appt.doctor else "N/A",
                     "department": appt.doctor.department.name if appt.doctor and appt.doctor.department else "N/A",
                     "date": appt.scheduled_time.strftime("%Y-%m-%d"),
                     "time": appt.scheduled_time.strftime("%I:%M %p"),
+                    "scheduled_time": appt.scheduled_time.isoformat() if appt.scheduled_time else None,
                     "complaint": appt.complaint,
                     "status": appt.get_computed_status(),
                     # Notes excluded for patient privacy - only doctors can see notes
@@ -106,6 +149,7 @@ class PatientService:
             "past_appointments": [
                 {
                     "id": appt.id,
+                    "doctor_id": appt.doctor_id,
                     "doctor": appt.doctor.name if appt.doctor else "N/A",
                     "date": appt.scheduled_time.strftime("%Y-%m-%d"),
                     "complaint": appt.complaint,
@@ -401,6 +445,74 @@ class PatientService:
             },
             "upcoming_appointments": sorted(upcoming, key=lambda x: x["date"]),
             "past_appointments": sorted(past, key=lambda x: x["date"], reverse=True)
+        }
+
+    @staticmethod
+    def cancel_appointment(db: Session, patient_id: int, appointment_id: int) -> Dict:
+        """Cancel one of the patient's future appointments"""
+        appointment = appt_crud.get(db, appointment_id)
+        if not appointment:
+            return {"error": "Appointment not found"}
+
+        if appointment.patient_id != patient_id:
+            return {"error": "Access denied"}
+
+        if appointment.status == "Cancelled":
+            return {"error": "Appointment is already cancelled"}
+
+        if appointment.status == "Completed" or appointment.scheduled_time <= datetime.now():
+            return {"error": "Only future appointments can be cancelled"}
+
+        updated = appt_crud.cancel_appointment(db, appointment_id)
+        return {
+            "success": True,
+            "message": "Appointment cancelled successfully",
+            "appointment": updated.to_dict(include_computed_status=True) if updated else None,
+        }
+
+    @staticmethod
+    def reschedule_appointment(
+        db: Session,
+        patient_id: int,
+        appointment_id: int,
+        appointment_date: str,
+        appointment_time: str,
+    ) -> Dict:
+        """Reschedule one of the patient's future appointments"""
+        appointment = appt_crud.get(db, appointment_id)
+        if not appointment:
+            return {"error": "Appointment not found"}
+
+        if appointment.patient_id != patient_id:
+            return {"error": "Access denied"}
+
+        if appointment.status in ["Cancelled", "Completed"] or appointment.scheduled_time <= datetime.now():
+            return {"error": "Only future appointments can be rescheduled"}
+
+        try:
+            target_date = datetime.strptime(appointment_date, "%Y-%m-%d").date()
+            target_time = datetime.strptime(appointment_time, "%H:%M").time()
+            scheduled_datetime = datetime.combine(target_date, target_time)
+        except ValueError:
+            return {"error": "Invalid date or time format"}
+
+        if scheduled_datetime <= datetime.now():
+            return {"error": "Reschedule time must be in the future"}
+
+        available_slots = appt_crud.get_available_slots(
+            db,
+            appointment.doctor_id,
+            target_date,
+            exclude_appointment_id=appointment.id,
+        )
+        if appointment_time not in available_slots:
+            return {"error": "Selected time slot is not available"}
+
+        updated = appt_crud.reschedule_appointment(db, appointment_id, scheduled_datetime)
+        return {
+            "success": True,
+            "message": "Appointment rescheduled successfully",
+            "appointment": updated.to_dict(include_computed_status=True) if updated else None,
         }
 
 

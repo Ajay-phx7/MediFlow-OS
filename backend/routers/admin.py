@@ -1,10 +1,56 @@
-from fastapi import APIRouter, Depends
+from datetime import date
+from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from database.connection import get_db
+from database.models import AdminUser
 from services.admin_service import AdminService
 
 router = APIRouter()
+
+
+def _require_admin_access(
+    db: Session,
+    x_user_role: str,
+    x_user_id: str,
+    require_pharmacy: bool = False,
+) -> AdminUser:
+    if not x_user_role or not x_user_id:
+        raise HTTPException(status_code=401, detail="Missing authentication headers")
+    if x_user_role.lower() != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    try:
+        admin_id = int(x_user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user id header")
+
+    admin = db.query(AdminUser).filter(AdminUser.id == admin_id).first()
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin account not found")
+
+    if require_pharmacy and admin.department != "Pharmacy":
+        raise HTTPException(status_code=403, detail="Pharmacy access required")
+
+    return admin
+
+
+class CreatePatientRequest(BaseModel):
+    name: str
+    date_of_birth: date
+    age: int
+    blood_group: str | None = None
+    allergies: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    address: str | None = None
+
+
+class CreateDoctorRequest(BaseModel):
+    name: str
+    department_id: int
+    specialization: str | None = None
+    is_available: bool = True
 
 
 @router.get("/stats")
@@ -27,7 +73,46 @@ def get_live_map(db: Session = Depends(get_db)):
     return AdminService.get_live_map(db)
 
 
-from pydantic import BaseModel
+@router.get("/departments")
+def get_departments(
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None),
+):
+    _require_admin_access(db, x_user_role, x_user_id)
+    return AdminService.get_departments(db)
+
+
+@router.post("/patients")
+def create_patient(
+    payload: CreatePatientRequest,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None),
+):
+    _require_admin_access(db, x_user_role, x_user_id)
+    return AdminService.create_patient(db, payload.model_dump())
+
+
+@router.post("/doctors")
+def create_doctor(
+    payload: CreateDoctorRequest,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None),
+):
+    _require_admin_access(db, x_user_role, x_user_id)
+    return AdminService.create_doctor(db, payload.model_dump())
+
+
+@router.get("/medicine-inventory")
+def get_medicine_inventory(
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None),
+):
+    _require_admin_access(db, x_user_role, x_user_id, require_pharmacy=True)
+    return AdminService.get_medicine_inventory()
 
 
 class SendChatMessageRequest(BaseModel):

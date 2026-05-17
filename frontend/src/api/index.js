@@ -32,6 +32,10 @@ export const getAdminSurgeForecast = () => api.get("/api/admin/surge-forecast");
 export const getSurgeForecastCustom = (days) =>
   api.post("/api/admin/surge-forecast/custom", { days });
 export const getAdminLiveMap = () => api.get("/api/admin/live-map");
+export const getAdminDepartments = () => api.get("/api/admin/departments");
+export const createAdminPatient = (payload) => api.post("/api/admin/patients", payload);
+export const createAdminDoctor = (payload) => api.post("/api/admin/doctors", payload);
+export const getMedicineInventory = () => api.get("/api/admin/medicine-inventory");
 export const getAdminEmergencyAlerts = () => api.get("/api/admin/emergency/alerts");
 export const getAdminEmergencyProtocols = () => api.get("/api/admin/emergency/protocols");
 export const getAdminEmergencyContacts = () => api.get("/api/admin/emergency/contacts");
@@ -53,6 +57,7 @@ export const loginAsDoctor = (doctorId) => api.get(`/api/auth/doctors/${doctorId
 export const getAvailablePatients = (search = "") =>
   api.get("/api/auth/patients", { params: search ? { search } : undefined });
 export const loginAsPatient = (patientId) => api.get(`/api/auth/patients/${patientId}`);
+export const signupPatient = (payload) => api.post("/api/auth/patients/signup", payload);
 
 export const getAllChat = () => api.get("/api/admin/chat/all");
 export const getDepartmentChat = (department) => api.get(`/api/admin/chat/${department}`);
@@ -89,5 +94,9 @@ export const getPatientAvailableSlots = (doctorId, appointmentDate) =>
     params: { doctor_id: doctorId, appointment_date: appointmentDate },
   });
 export const postPatientBookAppointment = (payload) => api.post("/api/patient/book-appointment", payload);
+export const cancelPatientAppointment = (appointmentId, patientId) =>
+  api.post(`/api/patient/appointments/${appointmentId}/cancel`, { patient_id: patientId });
+export const reschedulePatientAppointment = (appointmentId, payload) =>
+  api.post(`/api/patient/appointments/${appointmentId}/reschedule`, payload);
 
 export default api;

@@ -108,7 +108,13 @@ class CRUDAppointment(CRUDBase[Appointment]):
             db.refresh(appointment)
         return appointment
     
-    def get_available_slots(self, db: Session, doctor_id: int, target_date: date) -> List[str]:
+    def get_available_slots(
+        self,
+        db: Session,
+        doctor_id: int,
+        target_date: date,
+        exclude_appointment_id: Optional[int] = None,
+    ) -> List[str]:
         """
         Get available time slots for a doctor on a specific date
         Returns list of available time slots in HH:MM format
@@ -117,23 +123,30 @@ class CRUDAppointment(CRUDBase[Appointment]):
         start_hour = 9
         end_hour = 17
         slot_duration = 30  # minutes
-        
+
+        start_dt = datetime.combine(target_date, datetime.min.time()).replace(hour=start_hour)
+        end_dt = datetime.combine(target_date, datetime.min.time()).replace(hour=end_hour)
+
         # Get existing appointments for the doctor on that date
-        next_day = target_date + timedelta(days=1)
         existing_appointments = db.query(Appointment).filter(
             Appointment.doctor_id == doctor_id,
-            Appointment.scheduled_time >= target_date,
-            Appointment.scheduled_time < next_day,
+            Appointment.scheduled_time >= start_dt,
+            Appointment.scheduled_time < end_dt,
             Appointment.status != "Cancelled"
         ).all()
+
+        if exclude_appointment_id is not None:
+            existing_appointments = [
+                appt for appt in existing_appointments if appt.id != exclude_appointment_id
+            ]
         
         # Create set of booked times
         booked_times = {appt.scheduled_time.strftime("%H:%M") for appt in existing_appointments}
         
         # Generate all possible slots
         available_slots = []
-        current_time = datetime.combine(target_date, datetime.min.time()).replace(hour=start_hour)
-        end_time = datetime.combine(target_date, datetime.min.time()).replace(hour=end_hour)
+        current_time = start_dt
+        end_time = end_dt
         
         while current_time < end_time:
             time_str = current_time.strftime("%H:%M")
@@ -142,6 +155,32 @@ class CRUDAppointment(CRUDBase[Appointment]):
             current_time += timedelta(minutes=slot_duration)
         
         return available_slots
+
+    def cancel_appointment(self, db: Session, appointment_id: int) -> Optional[Appointment]:
+        """Cancel an appointment without deleting it"""
+        appointment = self.get(db, appointment_id)
+        if appointment:
+            appointment.status = "Cancelled"
+            appointment.updated_at = datetime.utcnow()
+            db.commit()
+            db.refresh(appointment)
+        return appointment
+
+    def reschedule_appointment(
+        self,
+        db: Session,
+        appointment_id: int,
+        scheduled_time: datetime,
+    ) -> Optional[Appointment]:
+        """Move an appointment to a new future time"""
+        appointment = self.get(db, appointment_id)
+        if appointment:
+            appointment.scheduled_time = scheduled_time
+            appointment.status = "Scheduled"
+            appointment.updated_at = datetime.utcnow()
+            db.commit()
+            db.refresh(appointment)
+        return appointment
 
 
 # Create instance

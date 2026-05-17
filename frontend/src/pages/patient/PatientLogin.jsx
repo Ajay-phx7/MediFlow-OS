@@ -8,7 +8,6 @@ const PatientLogin = () => {
   const navigate = useNavigate();
   const { setSelectedPatient } = useContext(AppContext);
   const [patients, setPatients] = useState([]);
-  const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -19,23 +18,10 @@ const PatientLogin = () => {
     });
   }, []);
 
-  const filteredPatients = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return patients;
-
-    return patients.filter((patient) => patient.name.toLowerCase().includes(term));
-  }, [patients, search]);
-
   const selectedPatient = useMemo(
-    () => filteredPatients.find((patient) => patient.id === Number(selectedId)),
-    [filteredPatients, selectedId]
+    () => patients.find((patient) => patient.id === Number(selectedId)),
+    [patients, selectedId]
   );
-
-  useEffect(() => {
-    if (!selectedPatient && filteredPatients.length > 0) {
-      setSelectedId(filteredPatients[0].id);
-    }
-  }, [filteredPatients, selectedPatient]);
 
   const handleContinue = async () => {
     if (!selectedPatient) return;
@@ -74,51 +60,27 @@ const PatientLogin = () => {
               Patient Access
             </p>
             <h1 className="font-headline-lg text-headline-lg text-primary mt-4">
-              Search and select your profile
+              Select your profile
             </h1>
             <p className="text-on-surface-variant mt-4 leading-relaxed">
               No password is needed. Pick your patient record, and the dashboard will show only your appointments, prescriptions, and consultation history.
             </p>
 
-            <div className="relative mt-8">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
-                search
-              </span>
-              <input
-                className="w-full rounded-xl border border-outline-variant bg-surface-container-low py-3 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant/50 outline-none focus:border-primary-container focus:shadow-glow-cyan transition-all"
-                placeholder="Search patient name"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </div>
-
-            <div className="grid gap-3 mt-6 max-h-[34rem] overflow-auto pr-1">
-              {filteredPatients.map((patient) => (
-                <button
-                  key={patient.id}
-                  className={`text-left rounded-xl border p-4 transition-all duration-300 ${
-                    selectedId === patient.id
-                      ? "border-primary-container bg-primary-container/10 shadow-glow-cyan"
-                      : "border-outline-variant bg-surface-container-low hover:border-primary-container/50"
-                  }`}
-                  onClick={() => setSelectedId(patient.id)}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="font-headline-lg font-semibold text-primary">
-                        {patient.name}
-                      </p>
-                      <p className="text-sm text-on-surface-variant mt-1">
-                        Age {patient.age ?? "--"} • Blood group {patient.blood_group ?? "--"}
-                      </p>
-                    </div>
-                    <span className="font-data-label text-xs uppercase tracking-wider text-primary-container">
-                      #{patient.id}
-                    </span>
-                  </div>
-                </button>
+            <label className="mt-8 block text-sm text-on-surface-variant">Patient profile</label>
+            <select
+              className="mt-3 w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3 text-on-surface outline-none focus:border-primary-container focus:shadow-glow-cyan transition-all"
+              value={selectedId ?? ""}
+              onChange={(event) => setSelectedId(Number(event.target.value))}
+            >
+              <option value="" disabled>
+                Select a patient
+              </option>
+              {patients.map((patient) => (
+                <option key={patient.id} value={patient.id}>
+                  {patient.name} - Age {patient.age ?? "--"} - {patient.blood_group ?? "--"}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* Preview Panel */}
@@ -146,8 +108,16 @@ const PatientLogin = () => {
               {isLoading ? "Opening dashboard..." : "Open patient dashboard"}
             </button>
 
+            <button
+              type="button"
+              className="mt-3 w-full rounded-xl border border-outline-variant py-3 text-sm font-semibold text-on-surface-variant hover:border-primary-container/50"
+              onClick={() => navigate("/patient/signup")}
+            >
+              Create a new profile
+            </button>
+
             <p className="text-xs text-on-surface-variant mt-4 leading-relaxed">
-              The search list is filtered locally and the chosen patient is stored so follow-up views stay on the same record across refreshes.
+              Your selection is stored locally so follow-up views stay on the same record across refreshes.
             </p>
           </div>
         </div>

@@ -10,6 +10,29 @@ from crud.base import CRUDBase
 
 class CRUDDoctor(CRUDBase[Doctor]):
     """CRUD operations for Doctor"""
+
+    def create(
+        self,
+        db: Session,
+        *,
+        name: str,
+        department_id: int,
+        specialization: Optional[str] = None,
+        is_available: bool = True,
+        appointments_today: int = 0,
+    ) -> Doctor:
+        """Create a new doctor"""
+        doctor = Doctor(
+            name=name,
+            department_id=department_id,
+            specialization=specialization,
+            is_available=is_available,
+            appointments_today=appointments_today,
+        )
+        db.add(doctor)
+        db.commit()
+        db.refresh(doctor)
+        return doctor
     
     def get_by_department(self, db: Session, department_id: int) -> List[Doctor]:
         """Get all doctors in a department"""

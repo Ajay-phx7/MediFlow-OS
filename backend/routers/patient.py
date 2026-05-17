@@ -31,6 +31,16 @@ class BookAppointmentRequest(BaseModel):
     complaint: Optional[str] = None
 
 
+class CancelAppointmentRequest(BaseModel):
+    patient_id: int
+
+
+class RescheduleAppointmentRequest(BaseModel):
+    patient_id: int
+    appointment_date: str
+    appointment_time: str
+
+
 @router.get("/dashboard")
 def get_patient_dashboard(
     patient_id: int,
@@ -119,6 +129,36 @@ def get_patient_appointments(
     """
     _require_patient_access(patient_id, x_user_role, x_user_id)
     return PatientService.get_patient_appointments(db, patient_id)
+
+
+@router.post("/appointments/{appointment_id}/cancel")
+def cancel_appointment(
+    appointment_id: int,
+    payload: CancelAppointmentRequest,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None)
+):
+    _require_patient_access(payload.patient_id, x_user_role, x_user_id)
+    return PatientService.cancel_appointment(db, payload.patient_id, appointment_id)
+
+
+@router.post("/appointments/{appointment_id}/reschedule")
+def reschedule_appointment(
+    appointment_id: int,
+    payload: RescheduleAppointmentRequest,
+    db: Session = Depends(get_db),
+    x_user_role: str = Header(None),
+    x_user_id: str = Header(None)
+):
+    _require_patient_access(payload.patient_id, x_user_role, x_user_id)
+    return PatientService.reschedule_appointment(
+        db,
+        payload.patient_id,
+        appointment_id,
+        payload.appointment_date,
+        payload.appointment_time
+    )
 
 
 # Made with Bob

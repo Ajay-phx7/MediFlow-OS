@@ -66,33 +66,22 @@ const DoctorLogin = () => {
               No password is required. Select a doctor to open the matching dashboard with only that doctor's connected patients, appointments, and prescriptions.
             </p>
 
-            <div className="grid gap-3 mt-8">
+            <label className="mt-8 block text-sm text-on-surface-variant">Doctor profile</label>
+            <select
+              className="mt-3 w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3 text-on-surface outline-none focus:border-primary-container focus:shadow-glow-cyan transition-all"
+              value={selectedId ?? ""}
+              onChange={(event) => setSelectedId(Number(event.target.value))}
+            >
+              <option value="" disabled>
+                Select a doctor
+              </option>
               {doctors.map((doctor) => (
-                <button
-                  key={doctor.id}
-                  className={`text-left rounded-xl border p-4 transition-all duration-300 ${
-                    selectedId === doctor.id
-                      ? "border-primary-container bg-primary-container/10 shadow-glow-cyan"
-                      : "border-outline-variant bg-surface-container-low hover:border-primary-container/50"
-                  }`}
-                  onClick={() => setSelectedId(doctor.id)}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="font-headline-lg text-lg font-semibold text-primary">
-                        {doctor.name}
-                      </p>
-                      <p className="text-sm text-on-surface-variant mt-1">
-                        {doctor.department} {doctor.specialization ? `• ${doctor.specialization}` : ""}
-                      </p>
-                    </div>
-                    <span className="font-data-label text-xs uppercase tracking-wider text-primary-container">
-                      #{doctor.id}
-                    </span>
-                  </div>
-                </button>
+                <option key={doctor.id} value={doctor.id}>
+                  {doctor.name} - {doctor.department}
+                  {doctor.specialization ? ` (${doctor.specialization})` : ""}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* Preview Panel */}

@@ -1,11 +1,23 @@
 import { useContext, useEffect, useState } from "react";
 
 import Navbar from "../../components/Navbar.jsx";
-import { getPatientDashboard } from "../../api/index.js";
+import {
+  cancelPatientAppointment,
+  getPatientAvailableSlots,
+  getPatientDashboard,
+  reschedulePatientAppointment,
+} from "../../api/index.js";
 import { AppContext } from "../../context/AppContext.jsx";
 
 const PatientDashboard = () => {
   const [data, setData] = useState(null);
+  const [actionMessage, setActionMessage] = useState(null);
+  const [actionError, setActionError] = useState(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleSlot, setRescheduleSlot] = useState("");
+  const [rescheduleSlots, setRescheduleSlots] = useState([]);
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
   const { selectedPatient } = useContext(AppContext);
 
   useEffect(() => {
@@ -14,6 +26,93 @@ const PatientDashboard = () => {
     }
     getPatientDashboard(selectedPatient.id).then((response) => setData(response.data));
   }, [selectedPatient]);
+
+  useEffect(() => {
+    const fetchSlots = async () => {
+      if (!rescheduleTarget?.doctor_id || !rescheduleDate) {
+        setRescheduleSlots([]);
+        return;
+      }
+
+      try {
+        setRescheduleLoading(true);
+        const response = await getPatientAvailableSlots(rescheduleTarget.doctor_id, rescheduleDate);
+        if (response.data.error) {
+          setActionError(response.data.error);
+          setRescheduleSlots([]);
+        } else {
+          setRescheduleSlots(response.data.available_slots ?? []);
+        }
+      } catch (error) {
+        console.error("Error fetching slots:", error);
+        setActionError("Failed to load available slots.");
+        setRescheduleSlots([]);
+      } finally {
+        setRescheduleLoading(false);
+      }
+    };
+
+    fetchSlots();
+  }, [rescheduleTarget, rescheduleDate]);
+
+  const refreshDashboard = async () => {
+    if (!selectedPatient?.id) return;
+    const response = await getPatientDashboard(selectedPatient.id);
+    setData(response.data);
+  };
+
+  const handleCancelAppointment = async (appointmentId) => {
+    if (!selectedPatient?.id) return;
+    setActionError(null);
+    setActionMessage(null);
+
+    try {
+      const response = await cancelPatientAppointment(appointmentId, selectedPatient.id);
+      if (response.data.error) {
+        setActionError(response.data.error);
+      } else {
+        setActionMessage(response.data.message ?? "Appointment cancelled.");
+        setRescheduleTarget(null);
+      }
+    } catch (error) {
+      console.error("Error cancelling appointment:", error);
+      setActionError(error.response?.data?.error || "Failed to cancel appointment.");
+    } finally {
+      refreshDashboard();
+    }
+  };
+
+  const handleRescheduleSubmit = async (event) => {
+    event.preventDefault();
+    if (!selectedPatient?.id || !rescheduleTarget?.id) return;
+
+    setActionError(null);
+    setActionMessage(null);
+
+    try {
+      const response = await reschedulePatientAppointment(rescheduleTarget.id, {
+        patient_id: selectedPatient.id,
+        appointment_date: rescheduleDate,
+        appointment_time: rescheduleSlot,
+      });
+
+      if (response.data.error) {
+        setActionError(response.data.error);
+        return;
+      }
+
+      setActionMessage(response.data.message ?? "Appointment rescheduled.");
+      setRescheduleTarget(null);
+      setRescheduleDate("");
+      setRescheduleSlot("");
+      setRescheduleSlots([]);
+    } catch (error) {
+      console.error("Error rescheduling appointment:", error);
+      setActionError(error.response?.data?.error || "Failed to reschedule appointment.");
+    } finally {
+      refreshDashboard();
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -101,6 +200,16 @@ const PatientDashboard = () => {
         {/* Upcoming Appointments */}
         <div className="mb-6">
           <h4 className="text-sm font-semibold text-slate-700 mb-3">Upcoming</h4>
+          {actionError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              {actionError}
+            </div>
+          )}
+          {actionMessage && (
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+              {actionMessage}
+            </div>
+          )}
           <div className="space-y-3">
             {data?.upcoming_appointments && data.upcoming_appointments.length > 0 ? (
               data.upcoming_appointments.map((appt) => (
@@ -122,6 +231,82 @@ const PatientDashboard = () => {
                       {appt.status}
                     </span>
                   </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCancelAppointment(appt.id)}
+                      className="rounded-full border border-red-200 px-4 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRescheduleTarget(appt);
+                        setRescheduleDate("");
+                        setRescheduleSlot("");
+                        setRescheduleSlots([]);
+                        setActionError(null);
+                        setActionMessage(null);
+                      }}
+                      className="rounded-full border border-blue-200 px-4 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                      Reschedule
+                    </button>
+                  </div>
+                  {rescheduleTarget?.id === appt.id && (
+                    <form onSubmit={handleRescheduleSubmit} className="mt-4 rounded-xl bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">New slot</p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label className="text-xs font-semibold text-slate-600">
+                          Date
+                          <input
+                            type="date"
+                            className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            value={rescheduleDate}
+                            onChange={(event) => {
+                              setRescheduleDate(event.target.value);
+                              setRescheduleSlot("");
+                            }}
+                            required
+                          />
+                        </label>
+                        <label className="text-xs font-semibold text-slate-600">
+                          Time slot
+                          <select
+                            className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            value={rescheduleSlot}
+                            onChange={(event) => setRescheduleSlot(event.target.value)}
+                            required
+                          >
+                            <option value="">Select a slot</option>
+                            {rescheduleSlots.map((slot) => (
+                              <option key={slot} value={slot}>{slot}</option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                      {rescheduleLoading && (
+                        <p className="mt-3 text-xs text-slate-500">Loading available slots...</p>
+                      )}
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          type="submit"
+                          disabled={!rescheduleDate || !rescheduleSlot}
+                          className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                        >
+                          Confirm reschedule
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRescheduleTarget(null)}
+                          className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               ))
             ) : (

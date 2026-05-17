@@ -123,33 +123,21 @@ const AdminLogin = () => {
               Select Department
             </p>
             
-            <div className="mt-6 space-y-3">
+            <label className="mt-6 block text-sm text-on-surface-variant">Admin account</label>
+            <select
+              className="mt-3 w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3 text-on-surface outline-none focus:border-primary-container focus:shadow-glow-cyan transition-all"
+              value={selectedAdminId ?? ""}
+              onChange={(event) => setSelectedAdminId(Number(event.target.value))}
+            >
+              <option value="" disabled>
+                Select an admin account
+              </option>
               {admins.map((admin) => (
-                <button
-                  key={admin.id}
-                  className={`w-full text-left rounded-xl border p-4 transition-all duration-300 ${
-                    selectedAdminId === admin.id
-                      ? "border-primary-container bg-primary-container/10 shadow-glow-cyan"
-                      : "border-outline-variant bg-surface-container-low hover:border-primary-container/50"
-                  }`}
-                  onClick={() => setSelectedAdminId(admin.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-headline-lg text-lg font-semibold text-primary">
-                        {admin.department}
-                      </h3>
-                      <p className="font-data-label text-sm text-on-surface-variant mt-1">
-                        {admin.username}
-                      </p>
-                    </div>
-                    {selectedAdminId === admin.id && (
-                      <div className="w-3 h-3 rounded-full bg-primary-container animate-pulse shadow-glow-cyan"></div>
-                    )}
-                  </div>
-                </button>
+                <option key={admin.id} value={admin.id}>
+                  {admin.department} - {admin.username}
+                </option>
               ))}
-            </div>
+            </select>
 
             <button
               className="mt-6 w-full rounded-xl bg-primary-container text-on-primary-container py-3.5 font-bold disabled:opacity-50 hover:scale-105 transition-transform duration-150 active:scale-95"
